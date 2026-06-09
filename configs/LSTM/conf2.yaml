@@ -1,0 +1,17 @@
+# LSTM — conf2: deeper stacked LSTM
+general:
+  model_type: lstm
+
+training:
+  learning_rate: 1e-4
+  epochs: 200
+  batch_size: 256
+  early_stopping_max: 40
+  scheduler_patience: 15
+  weight_decay: 5e-5
+
+lstm:
+  hidden_dim: 128
+  num_layers: 3
+  dropout: 0.25
+  seq_len: 30
