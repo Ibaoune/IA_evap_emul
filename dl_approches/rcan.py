@@ -174,10 +174,10 @@ LWupSFC = ds_rad["LWupSFC"]
 LWdnSFC = ds_rad["LWdnSFC"]
 
 # Other variables
-pres_ds = load_lmdz("pres-hist2.nc",  "pres",  "LMDZOR_250")
-t2m_ds  = load_lmdz("t2m-hist1.nc",   "t2m",   "LMDZOR_250")
-u10m_ds = load_lmdz("u10m-hist1.nc",  "u10m",  "LMDZOR_250")
-v10m_ds = load_lmdz("v10m-hist1.nc",  "v10m",  "LMDZOR_250")
+pres_ds = load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/pres-hist2.nc",  "pres",  "LMDZOR_250")
+t2m_ds  = load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/t2m-hist1.nc",   "t2m",   "LMDZOR_250")
+u10m_ds = load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/u10m-hist1.nc",  "u10m",  "LMDZOR_250")
+v10m_ds = load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/v10m-hist1.nc",  "v10m",  "LMDZOR_250")
 
 # Evap 
 evap_lmdz250 = mask_dataset(
@@ -253,8 +253,8 @@ lat_values = evap_lmdz35["lat"].values
 lon_values = evap_lmdz35["lon"].values
 
 # Load other LMDZ35 variables
-albedo_ds   = load_lmdz("albedo_glob-hist1.nc", "albedo_glob", "LMDZOR_35").fillna(0)
-mean_lai_ds = load_lmdz("LAImean-hist1.nc",     "LAImean",     "LMDZOR_35").fillna(0)
+albedo_ds   = load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/albedo_glob-hist1.nc", "albedo_glob", "LMDZOR_35").fillna(0)
+mean_lai_ds = load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/LAImean-hist1.nc",     "LAImean",     "LMDZOR_35").fillna(0)
 
 # Reference grid: use coarse LMDZ250 grid (t2m_ds as an exemple) as the target for regridding
 # This ensures all coarse-resolution inputs share the same spatial grid

@@ -34,13 +34,26 @@ region:
   lat_max: 36
 
 paths:
-  data_LMDZ35_path:    "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/LMDZOR_35"
-  data_LMDZ250_path:   "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/LMDZOR_250"
-  altitude_path:       "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/altitude"
-  soil_moisture_path:  "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/soil_moisture"
-  soiltile_path:       "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/Soiltile"
-  shp_path:            "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/morocco_complet_shapefiles"
-  shp_regions_path:    "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/shapefiles_by_region"
-  tsol_path:           "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/tsol"
+  # Paths for Mohammad's environment
+  data_LMDZ35_path:    "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/models/lmdz/r35"
+  data_LMDZ250_path:   "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
+  altitude_path:       "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
+  soil_moisture_path:  "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
+  soiltile_path:       "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
+  shp_path:            "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/shapefiles"
+  shp_regions_path:    "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/shapefiles/Morocco_shpfile"
+  tsol_path:           "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
   model_save_dir:      "models"
-  results_dir:         "results"
+  results_dir:         "/srv/data/mohammad.elaabaribao/work/interns/y2026/evap/ds_evap_intern/results"
+
+  # Paths for Hassan's environment
+  # data_LMDZ35_path:    "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw /home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging"
+  # data_LMDZ250_path:   "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw /home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging"
+  # altitude_path:       "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/altitude"
+  # soil_moisture_path:  "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/soil_moisture"
+  # soiltile_path:       "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/Soiltile"
+  # shp_path:            "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw /home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles"
+  # shp_regions_path:    "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw /home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles"
+  # tsol_path:           "C:/Users/PC Paradise/Desktop/Work/Projects/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw /home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging"
+  # model_save_dir:      "models"
+  # results_dir:         "results"

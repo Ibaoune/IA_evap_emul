@@ -18,11 +18,11 @@ import argparse
 # ── project root on the path ─────────────────────────────────────────────────
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from config                        import load_config
-from load.data_loading             import load_datasets_fine
-from preprocessing.preprocessing  import preprocess_dataPointwise
-from training.training             import PointWiseTrain
-from utils                         import vprint, set_verbose
+from src.core.config               import load_config
+from src.data.data_loading         import load_datasets_fine
+from src.data.preprocessing        import preprocess_dataPointwise
+from src.core.training             import PointWiseTrain
+from src.core.utils                import vprint, set_verbose
 
 
 def main():

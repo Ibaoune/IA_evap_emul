@@ -17,11 +17,11 @@ import time
 
 # Allow imports from project root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from arch.LSTM import PointLSTM, make_sequences
-from arch.MLP  import PointMLP
-from arch.XGB  import build_xgb
-from arch.MLR_RF import build_mlr_rf
-from utils import BernoulliGammaLossPointwise, EarlyStopper, vprint
+from src.models.LSTM import PointLSTM, make_sequences
+from src.models.MLP  import PointMLP
+from src.models.XGB  import build_xgb
+from src.models.MLR_RF import build_mlr_rf
+from src.core.utils import BernoulliGammaLossPointwise, EarlyStopper, vprint
 
 
 # ==========================================================

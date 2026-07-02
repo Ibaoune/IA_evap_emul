@@ -13,7 +13,7 @@ from scipy.ndimage import distance_transform_edt
 
 # Allow imports from project root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import vprint, build_morocco_mask
+from src.core.utils import vprint, build_morocco_mask
 
 
 # ==========================================================
