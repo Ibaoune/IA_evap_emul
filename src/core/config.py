@@ -87,6 +87,27 @@ class Config:
         self.mlr_rf_n_jobs       = _to_int(mlr_rf.get("n_jobs", -1))
 
         # ----------------------
+        # AutoEncoder parameters
+        # ----------------------
+        ae = cfg_dict.get("autoencoder", {})
+        self.ae_latent_dim = _to_int(ae.get("latent_dim", 256))
+
+        # ----------------------
+        # ConvLSTM parameters
+        # ----------------------
+        clstm = cfg_dict.get("convlstm", {})
+        self.clstm_hidden_channels = _to_int(clstm.get("hidden_channels", 32))
+
+        # ----------------------
+        # RCAN parameters
+        # ----------------------
+        rcan = cfg_dict.get("rcan", {})
+        self.rcan_n_feat    = _to_int(rcan.get("n_feat", 32))
+        self.rcan_n_groups  = _to_int(rcan.get("n_groups", 5))
+        self.rcan_n_rcab    = _to_int(rcan.get("n_rcab", 6))
+        self.rcan_reduction = _to_int(rcan.get("reduction", 8))
+
+        # ----------------------
         # Region
         # ----------------------
         reg = cfg_dict["region"]

@@ -21,7 +21,10 @@ from src.models.LSTM import PointLSTM, make_sequences
 from src.models.MLP  import PointMLP
 from src.models.XGB  import build_xgb
 from src.models.MLR_RF import build_mlr_rf
-from src.core.utils import BernoulliGammaLossPointwise, EarlyStopper, vprint
+from src.models.AutoEncoder import AutoEncoder
+from src.models.ConvLSTM import ConvLSTM
+from src.models.RCAN import RCAN
+from src.core.utils import BernoulliGammaLossPointwise, BernoulliGammaLossSpatial, SequenceDataset, EarlyStopper, vprint
 
 
 # ==========================================================
@@ -189,4 +192,169 @@ def PointWiseTrain(cfg,
                    f"| {best_val_log}{elapsed:.1f}min ETA {eta:.1f}min")
 
     vprint(f"{cfg.model_type.upper()} point-wise training done.")
+    return model_preds, all_train_losses, all_val_losses
+
+
+# ==========================================================
+# Spatial training loop (AutoEncoder, ConvLSTM, RCAN)
+# ==========================================================
+
+def SpatialTrain(cfg,
+                 X_train, Y_train, T_train,
+                 X_val,   Y_val,   T_val,
+                 X_test,  Y_test,  T_test,
+                 feature_names, nlat, nlon, lats, lons, morocco_mask):
+    """
+    X_*  : (T, nlat, nlon, C)  float32
+    Y_*  : (T, nlat, nlon)     float32
+    """
+    vprint(f"Starting spatial {cfg.model_type.upper()} training...")
+
+    # Transpose to (T, C, nlat, nlon)
+    X_tr = X_train.transpose(0, 3, 1, 2).copy()
+    X_va = X_val.transpose(0, 3, 1, 2).copy()
+    X_te = X_test.transpose(0, 3, 1, 2).copy()
+
+    EPS = 1e-8
+    # ── per-pixel temporal normalization (fit on train only) ──
+    # Skip one-hot or mask channels if we want, but for now we normalize everything
+    # except masks which are usually 0/1. Let's just normalize channels strictly.
+    for c in range(X_tr.shape[1]):
+        name = feature_names[c]
+        if name in ["land_mask", "soiltile_bare", "soiltile_short", "soiltile_tall", "month_sin", "month_cos"]:
+            continue
+        mean_map = X_tr[:, c, :, :].mean(axis=0)
+        std_map  = X_tr[:, c, :, :].std(axis=0)
+        std_map  = np.where(std_map < EPS, 1.0, std_map)
+        X_tr[:, c, :, :] = (X_tr[:, c, :, :] - mean_map) / std_map
+        X_va[:, c, :, :] = (X_va[:, c, :, :] - mean_map) / std_map
+        X_te[:, c, :, :] = (X_te[:, c, :, :] - mean_map) / std_map
+
+    INPUT_SHAPE = (X_tr.shape[1], nlat, nlon)
+    OUTPUT_SHAPE = (1, nlat, nlon)
+
+    # ── model-specific setup ──
+    if cfg.model_type == "autoencoder":
+        model = AutoEncoder(INPUT_SHAPE, OUTPUT_SHAPE, latent_dim=cfg.ae_latent_dim)
+        is_seq = False
+    elif cfg.model_type == "convlstm":
+        model = ConvLSTM(in_channels=INPUT_SHAPE[0], hidden_channels=cfg.clstm_hidden_channels)
+        is_seq = True
+        seq_len = cfg.seq_len if hasattr(cfg, 'seq_len') and cfg.seq_len is not None else 7
+    elif cfg.model_type == "rcan":
+        model = RCAN(INPUT_SHAPE, OUTPUT_SHAPE, n_feat=cfg.rcan_n_feat, n_groups=cfg.rcan_n_groups, n_rcab=cfg.rcan_n_rcab, reduction=cfg.rcan_reduction)
+        is_seq = False
+    else:
+        raise ValueError(f"Unknown spatial model type: {cfg.model_type}")
+
+    model = model.to(cfg.device)
+
+    # ── datasets & loaders ──
+    if is_seq:
+        train_ds = SequenceDataset(X_tr, Y_train, seq_len)
+        val_ds   = SequenceDataset(X_va, Y_val, seq_len)
+        test_ds  = SequenceDataset(X_te, Y_test, seq_len)
+        te_offset = seq_len
+    else:
+        # Standard TensorDataset
+        train_ds = TensorDataset(torch.FloatTensor(X_tr), torch.FloatTensor(Y_train).unsqueeze(1))
+        val_ds   = TensorDataset(torch.FloatTensor(X_va), torch.FloatTensor(Y_val).unsqueeze(1))
+        test_ds  = TensorDataset(torch.FloatTensor(X_te), torch.FloatTensor(Y_test).unsqueeze(1))
+        te_offset = 0
+
+    train_loader = DataLoader(train_ds, batch_size=cfg.batch_size, shuffle=True)
+    val_loader   = DataLoader(val_ds, batch_size=cfg.batch_size, shuffle=False)
+    test_loader  = DataLoader(test_ds, batch_size=cfg.batch_size, shuffle=False)
+
+    mask_tensor = torch.BoolTensor(morocco_mask).to(cfg.device)
+    criterion = BernoulliGammaLossSpatial(mask=mask_tensor)
+
+    optimizer = optim.Adam(model.parameters(), lr=cfg.learning_rate, weight_decay=cfg.weight_decay)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="min", factor=0.5, patience=cfg.scheduler_patience, min_lr=1e-6)
+    early_stopper = EarlyStopper(patience=cfg.early_stopping_max, min_delta=0.005)
+
+    best_val_loss = float('inf')
+    best_w = None
+
+    all_train_losses, all_val_losses = [], []
+    start_time = time.time()
+
+    for epoch in range(1, cfg.epochs + 1):
+        model.train()
+        running_train = 0.0
+        for xb, yb in train_loader:
+            xb, yb = xb.to(cfg.device), yb.to(cfg.device)
+            optimizer.zero_grad()
+            pred = model(xb)
+            loss = criterion(yb, pred)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
+            running_train += loss.item()
+        
+        train_loss = running_train / len(train_loader)
+        all_train_losses.append(train_loss)
+
+        model.eval()
+        running_val = 0.0
+        with torch.no_grad():
+            for xb, yb in val_loader:
+                xb, yb = xb.to(cfg.device), yb.to(cfg.device)
+                running_val += criterion(yb, model(xb)).item()
+        val_loss = running_val / max(len(val_loader), 1)
+        all_val_losses.append(val_loss)
+
+        scheduler.step(val_loss)
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_w = {k: v.clone() for k, v in model.state_dict().items()}
+
+        vprint(f"Epoch {epoch:3d}/{cfg.epochs} | train={train_loss:.4f} | val={val_loss:.4f} | lr={optimizer.param_groups[0]['lr']:.6f}")
+
+        if early_stopper.early_stop(val_loss):
+            vprint(f"Early stop at epoch {epoch}")
+            break
+
+    if best_w is not None:
+        model.load_state_dict(best_w)
+
+    vprint(f"Training completed in {(time.time() - start_time)/60:.1f} minutes")
+
+    # ── Inference on whole domain ──
+    model.eval()
+    all_preds_te = []
+    with torch.no_grad():
+        for xb, _ in test_loader:
+            pred_raw = model(xb.to(cfg.device)).cpu()
+            occ = pred_raw[:, 0]
+            shp = torch.exp(pred_raw[:, 1])
+            scl = torch.exp(pred_raw[:, 2])
+            all_preds_te.append((occ * shp * scl).numpy().clip(min=0))
+    pred_te = np.concatenate(all_preds_te, axis=0)  # (T_te, nlat, nlon)
+
+    # ── Package into model_preds same format as PointWiseTrain ──
+    # Note: PointWiseTrain returns a list of dicts per valid point.
+    # To maintain compatibility with train.py, we can just reshape pred_te into the same format!
+    model_preds = []
+    valid_points = [(i, j) for i in range(nlat) for j in range(nlon) if morocco_mask[i, j]]
+
+    for (li, lj) in valid_points:
+        te_df = pd.DataFrame({
+            "time":    T_test[te_offset:],
+            "target":  Y_test[te_offset:, li, lj],
+            "lat_idx": li,
+            "lon_idx": lj,
+        })
+        model_preds.append({
+            "lat":      lats[li], "lon":     lons[lj],
+            "lat_idx":  li,       "lon_idx": lj,
+            "te_df":    te_df,
+            "pred":     pred_te[:, li, lj],
+            "tr_pred":  np.zeros(len(Y_train)), # spatial doesn't easily return train preds in bulk
+            "tr_target": Y_train[:, li, lj],
+        })
+
+    vprint(f"{cfg.model_type.upper()} spatial training done.")
     return model_preds, all_train_losses, all_val_losses

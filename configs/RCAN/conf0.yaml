@@ -1,0 +1,17 @@
+# RCAN — conf0
+general:
+  model_type: rcan
+
+training:
+  learning_rate: 1e-4
+  epochs: 300
+  batch_size: 128
+  early_stopping_max: 50
+  scheduler_patience: 15
+  weight_decay: 5e-3
+
+rcan:
+  n_feat: 32
+  n_groups: 5
+  n_rcab: 6
+  reduction: 8

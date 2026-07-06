@@ -196,3 +196,58 @@ class EarlyStopper:
         else:
             self.counter += 1
         return self.counter >= self.patience
+
+
+# ==========================================================
+# Spatial Loss & Dataset
+# ==========================================================
+
+class BernoulliGammaLossSpatial(nn.Module):
+    def __init__(self, mask=None):
+        """
+        mask : bool tensor (LAT, LON) — True inside Morocco.
+               If provided, loss is averaged only over valid pixels.
+        """
+        super(BernoulliGammaLossSpatial, self).__init__()
+        if mask is not None:
+            self.register_buffer('mask', mask.float())
+        else:
+            self.mask = None
+
+    def forward(self, true, pred):
+        true = true.squeeze(1)                           # (B, H, W)
+        occurrence      = pred[:, 0, :, :]
+        shape_parameter = torch.exp(pred[:, 1, :, :])
+        scale_parameter = torch.exp(pred[:, 2, :, :])
+        bool_rain       = (true > 0).float()
+        epsilon         = 1e-6
+
+        loss_map = -(                                    # (B, H, W)
+            (1 - bool_rain) * torch.log(1 - occurrence + epsilon) +
+            bool_rain * (
+                torch.log(occurrence + epsilon) +
+                (shape_parameter - 1) * torch.log(true + epsilon) -
+                shape_parameter * torch.log(scale_parameter + epsilon) -
+                torch.lgamma(shape_parameter + epsilon) -
+                true / (scale_parameter + epsilon)
+            )
+        )
+
+        if self.mask is not None:
+            return (loss_map * self.mask).sum() / (self.mask.sum() * loss_map.shape[0])
+        return loss_map.mean()
+
+
+class SequenceDataset(torch.utils.data.Dataset):
+    def __init__(self, X_np, Y_np, seq_len):
+        self.X   = X_np
+        self.Y   = Y_np
+        self.seq = seq_len
+
+    def __len__(self):
+        return len(self.X) - self.seq
+
+    def __getitem__(self, i):
+        x = torch.FloatTensor(self.X[i : i + self.seq])
+        y = torch.FloatTensor(self.Y[i + self.seq]).unsqueeze(0)
+        return x, y
