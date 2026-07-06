@@ -84,7 +84,7 @@ def preprocess_dataPointwise(cfg, X_all, Y_all, times, lats, lons, channel_names
     T, nlat, nlon, nfeat = X_all.shape
 
     vprint("Building Morocco land mask...")
-    morocco_mask = build_mask(lats, lons, cfg.shp_path)
+    morocco_mask = build_mask(lats, lons, cfg.shp_regions_path)
 
     vprint("Splitting data by year...")
     (

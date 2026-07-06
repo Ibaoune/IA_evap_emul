@@ -526,7 +526,7 @@ def main():
         Y_pred[ti[:n], li, lo]    = pred[:n]
         Y_test_np[ti[:n], li, lo] = te["target"].values[:n]
     
-    morocco_mask_fine = build_morocco_mask(lat_fine, lon_fine, cfg.shp_path)
+    morocco_mask_fine = build_morocco_mask(lat_fine, lon_fine, cfg.shp_regions_path)
     Y_pred[:,    ~morocco_mask_fine] = np.nan
     Y_test_np[:, ~morocco_mask_fine] = np.nan
 
@@ -575,8 +575,8 @@ def main():
     # ------------------------------------------------------------------
     morocco_gdf = gpd.read_file(
         next(
-            os.path.join(cfg.shp_path, n)
-            for n in os.listdir(cfg.shp_path) if n.endswith(".shp")
+            os.path.join(cfg.shp_regions_path, n)
+            for n in os.listdir(cfg.shp_regions_path) if n.endswith(".shp")
         )
     )
     plot_spatial_metrics(df_metrics, model_name, morocco_gdf, path_out)
