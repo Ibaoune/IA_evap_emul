@@ -1,0 +1,15 @@
+# AutoEncoder — conf2: Smaller latent dimension (stronger bottleneck)
+general:
+  model_type: autoencoder
+  conf_name: conf2
+
+training:
+  learning_rate: 1e-4
+  epochs: 150
+  batch_size: 128
+  early_stopping_max: 20
+  scheduler_patience: 10
+  weight_decay: 1e-4
+
+autoencoder:
+  latent_dim: 128

@@ -1,0 +1,23 @@
+general:
+  model_type: rcan
+
+training:
+  epochs: 2
+  batch_size: 2
+
+rcan:
+  n_feat: 8
+  n_groups: 2
+  n_rcab: 2
+  reduction: 2
+
+dates:
+  train:
+    start: 2004
+    end: 2004
+  val:
+    start: 2005
+    end: 2005
+  test:
+    start: 2006
+    end: 2006

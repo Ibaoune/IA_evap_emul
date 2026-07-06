@@ -1,0 +1,17 @@
+Model: XGB
+
+conf0.yaml
+Baseline XGBoost configuration. This experiment is used as the reference machine learning test, employing default tree depth and estimators.
+
+conf1.yaml
+This test increases the number of trees while keeping the depth shallow, alongside a smaller learning rate. The goal is to improve robustness and avoid overly aggressive fitting, promoting better generalization over unseen years.
+
+conf2.yaml
+This test employs deeper trees to capture highly complex, non-linear relationships. It aims to improve spatial structure and capture better representations of evaporation extremes, especially in heterogeneous regions.
+
+
+conf_test_available_data.yaml
+This is a first lightweight test using ONLY the data currently available on the HPC (LMDZ predictors, LAI, Albedo, Evaporation target).
+The 'soil moisture', 'tsol', and 'soiltile' predictors are INTENTIONALLY EXCLUDED for now because their NetCDF files have not been transferred/extracted yet.
+The goal of this test is to quickly validate the pipeline (imports, data loading, preprocessing, output writing) without crashing on missing data.
+It is extremely small (short period, few epochs/trees) and should be run on CPU first before launching any heavy experiments.

@@ -1,0 +1,20 @@
+general:
+  model_type: autoencoder
+
+training:
+  epochs: 2
+  batch_size: 2
+
+autoencoder:
+  latent_dim: 32
+
+dates:
+  train:
+    start: 2004
+    end: 2004
+  val:
+    start: 2005
+    end: 2005
+  test:
+    start: 2006
+    end: 2006

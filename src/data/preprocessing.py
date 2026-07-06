@@ -124,36 +124,38 @@ def add_static_fields(datasets, evap_lmdz35, altitude_2d, soiltile_tiles):
     T_all = len(evap_lmdz35.time_counter)
 
     # altitude
-    altitude_fine = altitude_2d.interp(
-        lat=evap_lmdz35.lat.values, lon=evap_lmdz35.lon.values, method="linear"
-    ).fillna(0)
-    datasets["altitude"] = xr.DataArray(
-        np.broadcast_to(altitude_fine.values[np.newaxis],
-                        (T_all, *altitude_fine.shape)).copy().astype(np.float32),
-        dims=["time_counter", "lat", "lon"],
-        coords={"time_counter": evap_lmdz35.time_counter,
-                "lat": evap_lmdz35.lat, "lon": evap_lmdz35.lon},
-        name="altitude"
-    )
-
-    # soiltiles
-    for name, tile_2d in soiltile_tiles.items():
-        tile_fine = tile_2d.interp(
-            lat=evap_lmdz35.lat.values,
-            lon=evap_lmdz35.lon.values,
-            method="linear"
+    if altitude_2d is not None:
+        altitude_fine = altitude_2d.interp(
+            lat=evap_lmdz35.lat.values, lon=evap_lmdz35.lon.values, method="linear"
         ).fillna(0)
-        da = xr.DataArray(
-            np.broadcast_to(
-                tile_fine.values[np.newaxis],
-                (T_all, *tile_fine.shape)
-            ).copy().astype(np.float32),
+        datasets["altitude"] = xr.DataArray(
+            np.broadcast_to(altitude_fine.values[np.newaxis],
+                            (T_all, *altitude_fine.shape)).copy().astype(np.float32),
             dims=["time_counter", "lat", "lon"],
             coords={"time_counter": evap_lmdz35.time_counter,
                     "lat": evap_lmdz35.lat, "lon": evap_lmdz35.lon},
-            name=name
+            name="altitude"
         )
-        datasets[name] = _fill_nan_nearest(da)
+
+    # soiltiles
+    if soiltile_tiles is not None:
+        for name, tile_2d in soiltile_tiles.items():
+            tile_fine = tile_2d.interp(
+                lat=evap_lmdz35.lat.values,
+                lon=evap_lmdz35.lon.values,
+                method="linear"
+            ).fillna(0)
+            da = xr.DataArray(
+                np.broadcast_to(
+                    tile_fine.values[np.newaxis],
+                    (T_all, *tile_fine.shape)
+                ).copy().astype(np.float32),
+                dims=["time_counter", "lat", "lon"],
+                coords={"time_counter": evap_lmdz35.time_counter,
+                        "lat": evap_lmdz35.lat, "lon": evap_lmdz35.lon},
+                name=name
+            )
+            datasets[name] = _fill_nan_nearest(da)
 
     return datasets
 

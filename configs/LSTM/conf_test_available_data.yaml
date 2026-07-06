@@ -1,0 +1,22 @@
+general:
+  model_type: lstm
+
+training:
+  epochs: 2
+  batch_size: 128
+
+lstm:
+  hidden_dim: 16
+  num_layers: 1
+  seq_len: 3
+
+dates:
+  train:
+    start: 2004
+    end: 2004
+  val:
+    start: 2005
+    end: 2005
+  test:
+    start: 2006
+    end: 2006

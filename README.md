@@ -62,3 +62,8 @@ Input data is expected to include:
 - Raw DEM (elevation data).
 
 File paths for these datasets are defined in the configuration files (e.g., `configs/common.yaml` or model-specific YAML files).
+
+Configs follow the structure `configs/<Model_Name>/conf<X>.yaml` so multiple experiments can easily be tracked and queued.
+
+**Note on Experiments:**
+Each model configuration folder (e.g., `configs/LSTM/`) contains a `doc.txt` file. This document concisely explains the scientific and technical logic behind each prepared experiment (e.g., `conf0`, `conf1`, `conf2`), the hyperparameters changed, and the expected improvements (better generalization, enhanced temporal memory, etc.) without needing to read the YAML files directly.

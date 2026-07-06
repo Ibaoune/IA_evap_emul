@@ -1,16 +1,16 @@
-# MLP — conf1: wider network
+# MLP — conf1: Wider network with higher dropout
 general:
   model_type: mlp
+  conf_name: conf1
 
 training:
-  learning_rate: 5e-4
-  epochs: 150
-  early_stopping_max: 30
-  scheduler_patience: 10
+  learning_rate: 1e-4
+  epochs: 200
+  batch_size: 256
+  early_stopping_max: 40
+  scheduler_patience: 15
   weight_decay: 1e-4
 
 mlp:
-  batch_size: 128
-  hidden_layers: [128, 64, 32]
+  hidden_dims: [256, 128, 64]
   dropout: 0.3
-  weight_decay: 1e-4

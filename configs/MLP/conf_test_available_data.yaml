@@ -1,0 +1,20 @@
+general:
+  model_type: mlp
+
+training:
+  epochs: 2
+  batch_size: 256
+
+mlp:
+  hidden_layers: [32, 16]
+
+dates:
+  train:
+    start: 2004
+    end: 2004
+  val:
+    start: 2005
+    end: 2005
+  test:
+    start: 2006
+    end: 2006

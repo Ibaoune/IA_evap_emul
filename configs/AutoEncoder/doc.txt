@@ -1,0 +1,17 @@
+Model: AutoEncoder
+
+conf0.yaml
+Baseline AutoEncoder configuration. Uses a standard latent dimension size to encode spatial predictors before decoding into high-resolution evaporation fields.
+
+conf1.yaml
+This test increases the latent dimension to 512. The goal is to retain more complex spatial relationships and high-frequency variations from the coarse predictors, which might yield better spatial structure and sharper gradients in the output.
+
+conf2.yaml
+This test implements a much stronger bottleneck. This forces the network to learn only the most dominant modes of climate variability, aiming for less overfitting and smoother, more generalized spatial patterns.
+
+
+conf_test_available_data.yaml
+This is a first lightweight test using ONLY the data currently available on the HPC (LMDZ predictors, LAI, Albedo, Evaporation target).
+The 'soil moisture', 'tsol', and 'soiltile' predictors are INTENTIONALLY EXCLUDED for now because their NetCDF files have not been transferred/extracted yet.
+The goal of this test is to quickly validate the pipeline (imports, data loading, preprocessing, output writing) without crashing on missing data.
+It is extremely small (short period, few epochs/trees) and should be run on CPU first before launching any heavy experiments.

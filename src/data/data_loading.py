@@ -80,35 +80,42 @@ def _load_variables(cfg):
     v10m_ds = _load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/v10m-hist1.nc",   "v10m", cfg.data_LMDZ250_path)
 
     # load LMDZ250 evaporation (coarse grid predictor)
-    vprint("Loading LMDZ250 evaporation (coarse grid predictor)...")
-    evap_lmdz250 = mask_dataset(
-        xr.open_dataset(os.path.join(cfg.data_LMDZ250_path, "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/evap_corrigée_clean.nc")), "evap_corrigée"
-    )["evap_corrigée"]
-    evap_lmdz250 = convert_evap_units(evap_lmdz250.sortby("lat"))
+    vprint("Skipping LMDZ250 evaporation (missing predictor)...")
 
     # load soil moisture variables
-    vprint("Loading soil moisture...")
-    mrso  = _load_soil(cfg, "mrso.nc",  "mrso")
-    mrsos = _load_soil(cfg, "mrsos.nc", "mrsos")
+    mrso, mrsos = None, None
+    if cfg.soil_moisture_path:
+        vprint("Loading soil moisture...")
+        mrso  = _load_soil(cfg, "mrso.nc",  "mrso")
+        mrsos = _load_soil(cfg, "mrsos.nc", "mrsos")
+    else:
+        vprint("WARNING: soil_moisture_path is missing/commented. Skipping mrso and mrsos.")
 
-    # load LMDZ35 evaporation (fine grid, the target)
-    vprint("Loading LMDZ35 target + ancillary...")
-    evap_lmdz35 = mask_dataset(
-        xr.open_dataset(os.path.join(cfg.data_LMDZ35_path, "evap_1979_2014_MA.nc")), "evap"
-    )["evap"]
-    evap_lmdz35 = convert_evap_units(evap_lmdz35.sortby("lat"))
+    # load target evaporation
+    vprint("Loading target evaporation...")
+    evap_lmdz35 = xr.open_dataset(os.path.join(cfg.target_evap_path, "evap_corrigée_clean.nc"))["evap_corrigée"]
+    evap_lmdz35 = mask_dataset(evap_lmdz35.to_dataset(), "evap_corrigée")["evap_corrigée"]
+    evap_lmdz35 = evap_lmdz35.sortby("lat")
 
     # load albedo and LAI
     vprint("Loading albedo and LAI...")
     albedo_ds   = _load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/albedo_glob-hist1.nc", "albedo_glob", cfg.data_LMDZ35_path).fillna(0)
     mean_lai_ds = _load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/LAImean-hist1.nc",     "LAImean",     cfg.data_LMDZ35_path).fillna(0)
 
-    vprint("Loading altitude (raw DEM)...")
-    altitude_raw = rioxarray.open_rasterio(os.path.join(cfg.altitude_path, "elevation.tif"))
-    altitude_2d  = altitude_raw.squeeze("band", drop=True).rename({"x": "lon", "y": "lat"})
+    altitude_2d = None
+    if cfg.altitude_path and os.path.exists(os.path.join(cfg.altitude_path, "elevation.tif")):
+        vprint("Loading altitude (raw DEM)...")
+        altitude_raw = rioxarray.open_rasterio(os.path.join(cfg.altitude_path, "elevation.tif"))
+        altitude_2d  = altitude_raw.squeeze("band", drop=True).rename({"x": "lon", "y": "lat"})
+    else:
+        vprint("WARNING: altitude_path missing or elevation.tif not found. Skipping altitude.")
 
-    vprint("Loading soil temperature (tsol)...")
-    tsol = mask_dataset(xr.open_dataset(os.path.join(cfg.tsol_path, "tsol.nc")), "tsol")["tsol"]
+    tsol = None
+    if cfg.tsol_path:
+        vprint("Loading soil temperature (tsol)...")
+        tsol = mask_dataset(xr.open_dataset(os.path.join(cfg.tsol_path, "tsol.nc")), "tsol")["tsol"]
+    else:
+        vprint("WARNING: tsol_path is missing/commented. Skipping tsol.")
 
     coarse_vars = {
         "t2m":          t2m_ds,
@@ -118,13 +125,16 @@ def _load_variables(cfg):
         "pres":         pres_ds,
         "u10m":         u10m_ds,
         "v10m":         v10m_ds,
-        "evap_lmdz250": evap_lmdz250,
         "albedo":       albedo_ds,
         "lai":          mean_lai_ds,
-        "mrso":         mrso,
-        "mrsos":        mrsos,
-        "tsol":         tsol,
     }
+    
+    if mrso is not None:
+        coarse_vars["mrso"] = mrso
+    if mrsos is not None:
+        coarse_vars["mrsos"] = mrsos
+    if tsol is not None:
+        coarse_vars["tsol"] = tsol
 
     # Sort lat ascending for all variables (ensures consistent grid alignment)
     for name, da in coarse_vars.items():
@@ -143,7 +153,12 @@ def load_datasets_fine(cfg):
     vprint("=== Loading datasets (fine grid) ===")
 
     coarse_vars, evap_lmdz35, altitude_2d = _load_variables(cfg)
-    soiltile_tiles = _load_soiltile(cfg)
+    
+    soiltile_tiles = None
+    if cfg.soiltile_path:
+        soiltile_tiles = _load_soiltile(cfg)
+    else:
+        vprint("WARNING: soiltile_path is missing/commented. Skipping soiltile.")
 
     vprint("Reindexing predictors to fine LMDZ35 grid (nearest)...")
     datasets = regrid_to_fine(coarse_vars, evap_lmdz35)

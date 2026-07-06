@@ -1,8 +1,13 @@
-# MLR-RF — conf1: more trees, deeper
+# MLR-RF — conf1: Random Forest with more trees
 general:
   model_type: mlr_rf
+  conf_name: conf1
+
+training:
+  learning_rate: 1e-4
+  epochs: 10
 
 mlr_rf:
-  n_estimators: 300
-  max_depth: 12
+  n_estimators: 200
+  max_depth: 8
   n_jobs: -1

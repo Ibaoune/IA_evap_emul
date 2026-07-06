@@ -1,17 +1,18 @@
-# LSTM — conf1: larger hidden, longer sequence
+# LSTM — conf1: Higher capacity, longer sequence
 general:
   model_type: lstm
+  conf_name: conf1
 
 training:
-  learning_rate: 5e-4
-  epochs: 150
-  batch_size: 64
-  early_stopping_max: 30
-  scheduler_patience: 10
+  learning_rate: 1e-4
+  epochs: 250
+  batch_size: 128
+  early_stopping_max: 40
+  scheduler_patience: 15
   weight_decay: 1e-4
 
 lstm:
-  hidden_dim: 256
-  num_layers: 2
-  dropout: 0.3
-  seq_len: 14
+  hidden_dim: 128
+  num_layers: 3
+  dropout: 0.2
+  seq_len: 30

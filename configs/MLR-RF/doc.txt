@@ -1,0 +1,17 @@
+Model: MLR-RF
+
+conf0.yaml
+Baseline MLR-RF configuration. Serves as the reference experiment with standard random forest parameters.
+
+conf1.yaml
+This test doubles the number of estimators (trees) while restricting tree depth. The goal is to increase statistical robustness through ensemble averaging, leading to better generalization across diverse Moroccan topographies.
+
+conf2.yaml
+This test allows the trees to grow deeper. The goal is to let the model capture highly localized, complex spatial structures, potentially better representing extremes in mountainous or highly irrigated zones.
+
+
+conf_test_available_data.yaml
+This is a first lightweight test using ONLY the data currently available on the HPC (LMDZ predictors, LAI, Albedo, Evaporation target).
+The 'soil moisture', 'tsol', and 'soiltile' predictors are INTENTIONALLY EXCLUDED for now because their NetCDF files have not been transferred/extracted yet.
+The goal of this test is to quickly validate the pipeline (imports, data loading, preprocessing, output writing) without crashing on missing data.
+It is extremely small (short period, few epochs/trees) and should be run on CPU first before launching any heavy experiments.

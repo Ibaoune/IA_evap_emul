@@ -35,14 +35,17 @@ region:
 
 paths:
   # Paths for Mohammad's environment
-  data_LMDZ35_path:    "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/models/lmdz/r35"
-  data_LMDZ250_path:   "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
-  altitude_path:       "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
-  soil_moisture_path:  "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
-  soiltile_path:       "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
-  shp_path:            "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/shapefiles"
-  shp_regions_path:    "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/shapefiles/Morocco_shpfile"
-  tsol_path:           "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
+  data_LMDZ35_path:    "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/lmdz/r35"
+  data_LMDZ250_path:   "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/lmdz/r250"
+  altitude_path:       "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/lmdz/r250"
+  shp_path:            "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/shapefiles"
+  shp_regions_path:    "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/shapefiles/Morocco_shpfile"
+  target_evap_path:    "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging"
+  
+  # Optional datasets waiting for transfer
+  # soil_moisture_path: "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_extracted/soil_moisture"
+  # soiltile_path:      "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_extracted/soiltile"
+  # tsol_path:          "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_extracted/tsol_1979_2014"
   model_save_dir:      "models"
   results_dir:         "/srv/data/mohammad.elaabaribao/work/interns/y2026/evap/ds_evap_intern/results"
 

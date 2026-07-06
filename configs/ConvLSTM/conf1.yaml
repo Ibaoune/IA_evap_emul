@@ -1,0 +1,16 @@
+# ConvLSTM — conf1: Longer sequence, more channels
+general:
+  model_type: convlstm
+  conf_name: conf1
+
+training:
+  learning_rate: 1e-4
+  epochs: 150
+  batch_size: 16
+  early_stopping_max: 20
+  scheduler_patience: 10
+  weight_decay: 1e-4
+
+convlstm:
+  seq_len: 14
+  hidden_channels: 64

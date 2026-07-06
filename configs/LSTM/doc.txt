@@ -1,0 +1,17 @@
+Model: LSTM
+
+conf0.yaml
+Baseline LSTM configuration. This configuration keeps a moderate sequence length, hidden size, and learning rate. It is used as the reference experiment.
+
+conf1.yaml
+This test increases the sequence length to give the model more temporal memory. It may improve the representation of delayed land-surface responses between climate predictors and evaporation.
+
+conf2.yaml
+This test shortens the sequence and simplifies the network. The goal is to evaluate if short-term meteorological drivers dominate the evaporation signal, preventing unnecessary overfitting to past noise and improving generalization.
+
+
+conf_test_available_data.yaml
+This is a first lightweight test using ONLY the data currently available on the HPC (LMDZ predictors, LAI, Albedo, Evaporation target).
+The 'soil moisture', 'tsol', and 'soiltile' predictors are INTENTIONALLY EXCLUDED for now because their NetCDF files have not been transferred/extracted yet.
+The goal of this test is to quickly validate the pipeline (imports, data loading, preprocessing, output writing) without crashing on missing data.
+It is extremely small (short period, few epochs/trees) and should be run on CPU first before launching any heavy experiments.

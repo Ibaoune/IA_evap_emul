@@ -137,12 +137,14 @@ class Config:
         self.data_LMDZ35_path   = str(paths["data_LMDZ35_path"])
         self.data_LMDZ250_path  = str(paths["data_LMDZ250_path"])
         self.altitude_path      = str(paths["altitude_path"])
-        self.soil_moisture_path = str(paths["soil_moisture_path"])
-        self.soiltile_path      = str(paths["soiltile_path"])
         self.shp_path           = str(paths["shp_path"])
         self.shp_regions_path   = str(paths["shp_regions_path"])
-        self.tsol_path          = str(paths["tsol_path"])
         self.model_save_dir     = str(paths["model_save_dir"])
+        self.target_evap_path   = str(paths.get("target_evap_path", ""))
+        
+        self.soil_moisture_path = paths.get("soil_moisture_path")
+        self.soiltile_path      = paths.get("soiltile_path")
+        self.tsol_path          = paths.get("tsol_path")
 
         # Results go in results/<MODEL_TYPE>/<conf_name>/
         base_results = str(paths["results_dir"])

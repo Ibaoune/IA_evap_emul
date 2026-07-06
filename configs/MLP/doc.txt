@@ -1,0 +1,17 @@
+Model: MLP
+
+conf0.yaml
+Baseline MLP configuration. Uses a standard two-layer architecture (128->64) with low dropout. Serves as the reference point-wise deep learning experiment.
+
+conf1.yaml
+This test introduces a wider, deeper network (256->128->64) with higher dropout. The scientific goal is to increase the model's capacity while strictly regularizing it, aiming for less overfitting and better stability during training.
+
+conf2.yaml
+This test uses a deeper but narrower architecture paired with a very low learning rate. It is designed to capture highly abstract representations incrementally, which could improve performance over complex regions such as mountains.
+
+
+conf_test_available_data.yaml
+This is a first lightweight test using ONLY the data currently available on the HPC (LMDZ predictors, LAI, Albedo, Evaporation target).
+The 'soil moisture', 'tsol', and 'soiltile' predictors are INTENTIONALLY EXCLUDED for now because their NetCDF files have not been transferred/extracted yet.
+The goal of this test is to quickly validate the pipeline (imports, data loading, preprocessing, output writing) without crashing on missing data.
+It is extremely small (short period, few epochs/trees) and should be run on CPU first before launching any heavy experiments.
