@@ -10,9 +10,12 @@ This project provides a machine learning and deep learning framework to model an
 - `dl_approches/`: Advanced deep learning models (AutoEncoder, ConvLSTM, RCAN).
 - `configs/`: YAML configuration files defining model hyperparameters and data paths for each architecture.
 - `scripts/`: Shell scripts for batch job submission (e.g., job_cpu.sh).
+- `postprocessing/`: Full evaluation and visualization package (see Postprocessing section below).
 - `train.py`: Main entry point script for training models.
 
 ## Usage
+
+### Training
 
 To train a model, run the `train.py` script from the root directory of the project and pass the path to the corresponding configuration file. 
 
@@ -38,13 +41,41 @@ The training script will:
 3. Train the specified model using the parameters defined in the YAML configuration.
 4. Save the model predictions, training metrics, and a copy of the configuration to the results directory.
 
+
+### Postprocessing
+
+After training, run the postprocessing scripts to generate evaluation figures and metrics. All commands are run from the **project root**.
+
+#### Single model evaluation
+
+Evaluates one trained model config and saves all plots under `postprocessing/results/<MODEL>/<conf>/`. For example, to evaluate the XGBoost model with configuration `conf0`:
+
+```bash
+python postprocessing/postprocess_single.py --config configs/XGB/conf0.yaml
+```
+
+#### Intercomparison between models
+
+Compares multiple trained configs side by side and saves all plots under `postprocessing/results/intercomparison/<run_label>/`.
+
+```bash
+# Compare specific configs
+python postprocessing/postprocess_compare.py --configs configs/XGB/conf0.yaml configs/MLP/conf0.yaml configs/LSTM/conf0.yaml configs/MLR-RF/conf0.yaml
+
+# Compare all configs of one model
+python postprocessing/postprocess_compare.py --model XGB
+
+# Compare all trained configs across all models
+python postprocessing/postprocess_compare.py --all
+```
+
 ## Requirements
 
 Ensure you have the necessary dependencies installed in your environment. Key packages include:
 - `numpy`, `pandas`, `xarray`, `rioxarray` (for data manipulation and geospatial processing)
 - `scikit-learn`, `xgboost` (for machine learning models)
 - PyTorch or TensorFlow (for deep learning components)
-- `scipy`
+- `scipy`, `geopandas`, `shapely`, `cartopy`, `matplotlib`
 
 ## Data Configuration
 
