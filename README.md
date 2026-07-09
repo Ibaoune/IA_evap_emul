@@ -10,7 +10,7 @@ This project provides a machine learning and deep learning framework to model an
   - Point-wise models: `LSTM`, `MLP`, `MLR_RF`, `XGB`
   - Spatial DL models: `AutoEncoder`, `ConvLSTM`, `RCAN`
 - `configs/`: YAML configuration files defining model hyperparameters and data paths for each architecture.
-- `scripts/`: Shell scripts for batch job submission (e.g., job_cpu.sh).
+- `scripts/`: Shell scripts for batch job submission (e.g., `job_cpu.sh`, `job_gpu.sh`, `submit_gpu_jobs.sh`).
 - `train.py`: Main entry point script for training all models.
 
 ## Usage
@@ -55,13 +55,23 @@ Ensure you have the necessary dependencies installed in your environment. Key pa
 
 ## Data Configuration
 
-Input data is expected to include:
-- LMDZ climate model variables (temperature, pressure, wind components).
-- Soil moisture.
-- Albedo and Leaf Area Index (LAI).
-- Raw DEM (elevation data).
+The pipeline ingests a comprehensive set of predictors spanning climate model outputs and remote sensing data:
+- **LMDZ250 (Coarse Grid Predictors)**: 
+  - Evapotranspiration (`evap`)
+  - Specific humidity (`q2m`)
+  - Sea level pressure (`pres`)
+  - Surface shortwave & longwave radiation (`swnet`, `lwnet`)
+  - 2m air temperature (`t2m`)
+  - Soil temperature (`tsol`)
+  - Wind components (`u10m`, `v10m`)
+  - Surface & total soil moisture (`mrsos`, `mrso`)
+- **LMDZ35 (Fine Grid Predictors / Static)**:
+  - Target Evapotranspiration (`evap`)
+  - Leaf Area Index (`LAImean`)
+  - Surface albedo (`albedo_glob`)
+  - Topography/Elevation (`altitude`)
 
-File paths for these datasets are defined in the configuration files (e.g., `configs/common.yaml` or model-specific YAML files).
+File paths for these datasets are securely mapped in `configs/common.yaml` and support nested folder structures seamlessly.
 
 Configs follow the structure `configs/<Model_Name>/conf<X>.yaml` so multiple experiments can easily be tracked and queued.
 

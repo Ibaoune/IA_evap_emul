@@ -9,7 +9,7 @@
 #SBATCH --nodes=1
 #SBATCH --time=24:00:00
 #SBATCH --mem=64G
-#SBATCH --account=CLIMAT-UM6P-ST-IWRI-7KSIFKVWKUY-DEFAULT-GPU
+#SBATCH --account=CLIMAT-7KSIFKVWKUY-DEFAULT-GPU
 
 # Load environment
 source /srv/software/easybuild/software/Anaconda3/2020.11/etc/profile.d/conda.sh
