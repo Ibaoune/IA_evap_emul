@@ -41,13 +41,13 @@ class Config:
         # Training
         # ----------------------
         tr = cfg_dict["training"]
-        self.learning_rate       = _to_float(tr.get("learning_rate"))
-        self.epochs              = _to_int(tr.get("epochs"))
-        self.batch_size          = _to_int(tr.get("batch_size"))
-        self.loss_type           = str(tr.get("loss_type"))
-        self.early_stopping_max  = _to_int(tr.get("early_stopping_max"))
-        self.scheduler_patience  = _to_int(tr.get("scheduler_patience"))
-        self.weight_decay        = _to_float(tr.get("weight_decay"))
+        self.learning_rate       = _to_float(tr.get("learning_rate", 0.001))
+        self.epochs              = _to_int(tr.get("epochs", 2))
+        self.batch_size          = _to_int(tr.get("batch_size", 32))
+        self.loss_type           = str(tr.get("loss_type", "MSE"))
+        self.early_stopping_max  = _to_int(tr.get("early_stopping_max", 5))
+        self.scheduler_patience  = _to_int(tr.get("scheduler_patience", 3))
+        self.weight_decay        = _to_float(tr.get("weight_decay", 0.0))
 
         # ----------------------
         # LSTM parameters
@@ -55,17 +55,17 @@ class Config:
         lstm = cfg_dict.get("lstm", {})
         self.hidden_dim = _to_int(lstm.get("hidden_dim"))
         self.num_layers = _to_int(lstm.get("num_layers"))
-        self.dropout    = _to_float(lstm.get("dropout"))
+        self.dropout    = _to_float(lstm.get("dropout", 0.0))
         self.seq_len    = _to_int(lstm.get("seq_len"))
 
         # ----------------------
         # MLP parameters
         # ----------------------
         mlp = cfg_dict.get("mlp", {})
-        self.mlp_batch_size   = _to_int(mlp.get("batch_size"))
-        self.mlp_weight_decay = _to_float(mlp.get("weight_decay"))
-        self.hidden_layers    = mlp.get("hidden_layers")
-        self.mlp_dropout      = _to_float(mlp.get("dropout"))
+        self.mlp_batch_size   = _to_int(mlp.get("batch_size", self.batch_size))
+        self.mlp_weight_decay = _to_float(mlp.get("weight_decay", self.weight_decay))
+        self.hidden_layers    = mlp.get("hidden_layers", mlp.get("hidden_dims", [128, 64]))
+        self.mlp_dropout      = _to_float(mlp.get("dropout", 0.0))
 
         # ----------------------
         # XGBoost parameters

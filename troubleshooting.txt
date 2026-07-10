@@ -1,0 +1,77 @@
+========================================================
+    DOCUMENT DE TROUBLESHOOTING - PIPELINE EVAPORATION
+========================================================
+Date: Juillet 2026
+
+Ce document trace les problèmes rencontrés lors de l'exécution des modèles spatiaux (AutoEncoder, ConvLSTM, RCAN) et point-wise (MLP, LSTM) sur le cluster GPU, ainsi que les solutions implémentées.
+
+--------------------------------------------------------
+PROBLÈME 1 : Erreur de typage avec les modèles MLP
+--------------------------------------------------------
+Symptôme : 
+Le job MLP crachait immédiatement avec une erreur `TypeError` ou `AttributeError` concernant `hidden_layers`.
+
+Cause : 
+Le fichier YAML de configuration (`configs/MLP/conf1.yaml`) utilisait le mot-clé `hidden_dims` au lieu de `hidden_layers`, mais la classe de configuration attendait strictement `hidden_layers`.
+
+Solution :
+Fichier modifié : `src/core/config.py`
+Dans le constructeur `Config.__init__`, ajout d'un mapping dynamique pour accepter indifféremment `hidden_layers` ou `hidden_dims` :
+`self.hidden_layers = kwargs.get("hidden_layers", kwargs.get("hidden_dims", [64, 64]))`
+
+
+--------------------------------------------------------
+PROBLÈME 2 : Loss "NaN" due aux valeurs manquantes (océan)
+--------------------------------------------------------
+Symptôme : 
+Les modèles spatiaux (AutoEncoder, ConvLSTM, RCAN) s'arrêtaient prématurément dès l'Epoch 1 ou 20 avec `train=nan | val=nan`. L'entraînement crashait.
+
+Cause : 
+La variable cible (évaporation) issue de `evap-hist1.nc` contient des valeurs manquantes (`NaN`) sur l'océan. La fonction de perte spatiale (`BernoulliGammaLossSpatial`) calculait le log-vraisemblance sur toute la grille 55x54. L'inclusion d'un seul `NaN` contaminait l'ensemble de la Loss avant que le masque terrestre (Morocco mask) ne puisse annuler les pixels océaniques.
+
+Solution :
+Fichier modifié : `src/core/utils.py`
+Dans `BernoulliGammaLossSpatial.forward`, les NaNs sont explicitement remplacés par des zéros avant les calculs :
+`true = torch.nan_to_num(true, nan=0.0)`
+
+
+--------------------------------------------------------
+PROBLÈME 3 : Overflow (Inf) des exponentielles sur l'océan
+--------------------------------------------------------
+Symptôme : 
+Même après avoir corrigé les NaNs de la cible, la perte devenait toujours `NaN`.
+
+Cause : 
+Les réseaux de neurones (CNN/ConvLSTM) font des prédictions sur toute la grille, y compris l'océan. En raison de l'initialisation aléatoire des poids, les valeurs brutes prédites (`pred`) pouvaient être très élevées. En appliquant `torch.exp(pred)`, le calcul débordait la limite du float32 et donnait l'infini (`inf`). 
+En mathématiques PyTorch, multiplier l'infini par le masque zéro (`inf * 0`) produit un `NaN`, qui se propageait à la Loss finale !
+
+Solution :
+Fichier modifié : `src/core/utils.py`
+1. Le masque est appliqué directement aux prédictions brutes *avant* tout calcul : 
+   `pred = pred * self.mask`
+2. Les prédictions ont été limitées (clamp) entre -20 et 20 avant l'exponentielle pour garantir que `exp()` ne produise plus jamais d'infini, même sur les pixels terrestres lors des premières époques :
+   `shape_parameter = torch.exp(torch.clamp(pred[:, 1, :, :], max=20.0, min=-20.0))`
+
+
+--------------------------------------------------------
+PROBLÈME 4 : Valeurs cibles négatives produisant un log(NaN)
+--------------------------------------------------------
+Symptôme : 
+Après toutes les corrections ci-dessus, les modèles spatiaux plantaient toujours avec un `NaN` instatané dans le calcul de la loss.
+
+Cause : 
+Les jeux de données climatiques d'évaporation (`Y_all`) contenaient de très petites valeurs négatives (probablement liées à des erreurs numériques d'interpolation ou à une condensation de l'humidité).
+La fonction de perte calcule `torch.log(true + epsilon)`. En passant une valeur de `true` négative (ex. -0.01) ajoutée à un epsilon très petit (`1e-6`), l'argument du logarithme devenait négatif.
+Un logarithme d'un nombre négatif produit `NaN`. (Les modèles Point-wise ne plantaient pas car le masque extrayait des points terrestres spécifiques qui étaient strictement positifs).
+
+Solution :
+Fichier modifié : `src/core/utils.py`
+Les valeurs cibles sont maintenant limitées à 0 au minimum (clamp) pour empêcher tout logarithme négatif dans la perte Gamma. Ce correctif a été appliqué pour `BernoulliGammaLossSpatial` et `BernoulliGammaLossPointwise` :
+`true = torch.nan_to_num(true, nan=0.0).clamp(min=0.0)`
+
+
+========================================================
+CONCLUSION ET ÉTAT ACTUEL
+========================================================
+Grâce à ces 4 correctifs, le problème de "NaN" a été définitivement éradiqué.
+Les 14 modèles (LSTM, MLP, XGBoost, MLR-RF, AutoEncoder, ConvLSTM, RCAN) ont maintenant tous terminé avec succès leurs entraînements respectifs, et leurs prédictions sont générées et sauvegardées sans aucune erreur mathématique.
