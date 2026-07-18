@@ -68,23 +68,22 @@ def _load_variables(cfg):
     """
     # load Radiation and humidity variable
     vprint("Skipping LMDZ250 radiation and humidity... (missing predictor)")
-    # ds_rad = xr.open_dataset(os.path.join(cfg.data_LMDZ250_path, "LMDZ_rad_q2m_surface.nc"))
-    # ds_rad = mask_dataset(ds_rad, "q2m_radiation").sortby("lat")
-    # swnet, lwnet = compute_net_radiation(ds_rad)
+    ds_rad = xr.open_dataset(os.path.join(cfg.data_LMDZ250_path, "LMDZ_rad_q2m_surface.nc"))
+    ds_rad = mask_dataset(ds_rad, "q2m_radiation").sortby("lat")
+    swnet, lwnet = compute_net_radiation(ds_rad)
 
     # load Temperature, pressure, wind
     vprint("Loading LMDZ250 temperature, pressure, wind...")
-    t2m_ds  = _load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/t2m-hist1.nc",   "t2m",  cfg.data_LMDZ250_path)
-    pres_ds = _load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/pres-hist2.nc",   "pres", cfg.data_LMDZ250_path)
-    u10m_ds = _load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/u10m-hist1.nc",   "u10m", cfg.data_LMDZ250_path)
-    v10m_ds = _load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/v10m-hist1.nc",   "v10m", cfg.data_LMDZ250_path)
+    t2m_ds  = _load_lmdz("t2m-hist1.nc",   "t2m",  cfg.data_LMDZ250_path)
+    pres_ds = _load_lmdz("pres-hist2.nc",   "pres", cfg.data_LMDZ250_path)
+    u10m_ds = _load_lmdz("u10m-hist1.nc",   "u10m", cfg.data_LMDZ250_path)
+    v10m_ds = _load_lmdz("v10m-hist1.nc",   "v10m", cfg.data_LMDZ250_path)
 
     # load LMDZ250 evaporation (coarse grid predictor)
     vprint("Loading LMDZ250 evaporation (coarse grid predictor)...")
     evap_lmdz250 = mask_dataset(
-        xr.open_dataset(os.path.join(cfg.data_LMDZ250_path, "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/evap_corrigée_clean.nc")), "evap_corrigée"
-    )["evap_corrigée"]
-    evap_lmdz250 = convert_evap_units(evap_lmdz250.sortby("lat"))
+        xr.open_dataset(os.path.join(cfg.data_LMDZ250_path, "evap-hist1.nc")), "evap"
+    )["evap"]
 
     # load soil moisture variables
     vprint("Loading soil moisture...")
@@ -100,8 +99,8 @@ def _load_variables(cfg):
 
     # load albedo and LAI
     vprint("Loading albedo and LAI...")
-    albedo_ds   = _load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/albedo_glob-hist1.nc", "albedo_glob", cfg.data_LMDZ35_path).fillna(0)
-    mean_lai_ds = _load_lmdz("/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/LAImean-hist1.nc",     "LAImean",     cfg.data_LMDZ35_path).fillna(0)
+    albedo_ds   = _load_lmdz("albedo_glob-hist1.nc", "albedo_glob", cfg.data_LMDZ35_path).fillna(0)
+    mean_lai_ds = _load_lmdz("LAImean-hist1.nc",     "LAImean",     cfg.data_LMDZ35_path).fillna(0)
 
     vprint("Loading altitude (raw DEM)...")
     altitude_raw = rioxarray.open_rasterio(os.path.join(cfg.altitude_path, "elevation.tif"))
@@ -112,9 +111,9 @@ def _load_variables(cfg):
 
     coarse_vars = {
         "t2m":          t2m_ds,
-        # "q2m":          ds_rad["q2m"],
-        # "swnet":        swnet,
-        # "lwnet":        lwnet,
+        "q2m":          ds_rad["q2m"],
+        "swnet":        swnet,
+        "lwnet":        lwnet,
         "pres":         pres_ds,
         "u10m":         u10m_ds,
         "v10m":         v10m_ds,
