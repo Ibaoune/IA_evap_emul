@@ -170,6 +170,9 @@ def add_region_labels(df, gdfs_regions):
     """
     id_map = {v: i for i, v in enumerate(REGION_ORDER)}
 
+    if df.empty or "lat" not in df.columns or "lon" not in df.columns:
+        return df.copy()
+
     coords = pd.DataFrame({"lat": df["lat"].values, "lon": df["lon"].values})
     gdf    = gpd.GeoDataFrame(coords,
                                geometry=gpd.points_from_xy(coords.lon, coords.lat))

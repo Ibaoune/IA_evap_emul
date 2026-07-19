@@ -78,8 +78,12 @@ def plot_spatial_metrics(df, model_name, gdf_morocco, path_out):
         bounds   = compute_smart_bounds(all_vals)
         if col == "KGE":
             bounds = [b for b in bounds if b <= 1.0]
-            if bounds[-1] < 1.0:
+            if len(bounds) == 0:
+                bounds = [-1.0, 0.0, 1.0]
+            elif bounds[-1] < 1.0:
                 bounds.append(1.0)
+            if len(bounds) == 1:
+                bounds.insert(0, bounds[0] - 1.0)
 
         ncolors = len(bounds) - 1
         cmap    = mpl.colors.ListedColormap(cmap_base(np.linspace(0, 1, ncolors)))

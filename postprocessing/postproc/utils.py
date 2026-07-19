@@ -132,7 +132,9 @@ def points_to_grid(valid_lats, valid_lons, values):
 
 def compute_smart_bounds(vals, n_bins=10):
     """Robust colorbar bounds based on IQR."""
-    vals = pd.Series(vals).dropna()
+    vals = pd.Series(vals).replace([np.inf, -np.inf], np.nan).dropna()
+    if len(vals) == 0:
+        return [0.0, 1.0]
     q1, q3 = vals.quantile(0.25), vals.quantile(0.75)
     iqr   = q3 - q1
     vmin  = vals[vals >= q1 - 1.5 * iqr].min()
@@ -158,5 +160,10 @@ def compute_smart_bounds(vals, n_bins=10):
         vmin_snap = -vmax_snap
         vmax_snap = vmin_snap + n_bins * step
 
-    decimals = min(2, max(0, -int(np.floor(np.log10(step + 1e-12)))))
-    return [round(vmin_snap + i * step, decimals) for i in range(n_bins + 1)]
+    decimals = max(0, -int(np.floor(np.log10(step + 1e-12))))
+    
+    bounds = [round(vmin_snap + i * step, decimals) for i in range(n_bins + 1)]
+    # Ensure no duplicates due to rounding
+    if len(set(bounds)) < len(bounds):
+        bounds = [vmin_snap + i * step for i in range(n_bins + 1)]
+    return bounds

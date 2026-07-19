@@ -1,8 +1,0 @@
-# MLR-RF — conf0: baseline
-general:
-  model_type: mlr_rf
-
-mlr_rf:
-  n_estimators: 100
-  max_depth: 8
-  n_jobs: -1

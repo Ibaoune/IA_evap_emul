@@ -1,0 +1,17 @@
+Model: ConvLSTM
+
+conf0.yaml
+Baseline ConvLSTM configuration. This configuration balances temporal context (7 days) with a moderate number of spatial hidden channels (32).
+
+conf1.yaml
+This test doubles the temporal window (14 days) and increases the channel capacity. The scientific logic is to enhance both temporal memory and spatial feature extraction simultaneously, which could dramatically improve performance over areas driven by long-term soil moisture depletion.
+
+conf2.yaml
+This test drastically cuts the sequence length (3 days) and limits channel width. By restricting the model's memory, it prevents the ConvLSTM from memorizing specific weather patterns, ideally yielding better generalization and faster training.
+
+
+conf_test_available_data.yaml
+This is a first lightweight test using ONLY the data currently available on the HPC (LMDZ predictors, LAI, Albedo, Evaporation target).
+The 'soil moisture', 'tsol', and 'soiltile' predictors are INTENTIONALLY EXCLUDED for now because their NetCDF files have not been transferred/extracted yet.
+The goal of this test is to quickly validate the pipeline (imports, data loading, preprocessing, output writing) without crashing on missing data.
+It is extremely small (short period, few epochs/trees) and should be run on CPU first before launching any heavy experiments.

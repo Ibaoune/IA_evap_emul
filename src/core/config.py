@@ -41,13 +41,13 @@ class Config:
         # Training
         # ----------------------
         tr = cfg_dict["training"]
-        self.learning_rate       = _to_float(tr.get("learning_rate"))
-        self.epochs              = _to_int(tr.get("epochs"))
-        self.batch_size          = _to_int(tr.get("batch_size"))
-        self.loss_type           = str(tr.get("loss_type"))
-        self.early_stopping_max  = _to_int(tr.get("early_stopping_max"))
-        self.scheduler_patience  = _to_int(tr.get("scheduler_patience"))
-        self.weight_decay        = _to_float(tr.get("weight_decay"))
+        self.learning_rate       = _to_float(tr.get("learning_rate", 0.001))
+        self.epochs              = _to_int(tr.get("epochs", 2))
+        self.batch_size          = _to_int(tr.get("batch_size", 32))
+        self.loss_type           = str(tr.get("loss_type", "MSE"))
+        self.early_stopping_max  = _to_int(tr.get("early_stopping_max", 5))
+        self.scheduler_patience  = _to_int(tr.get("scheduler_patience", 3))
+        self.weight_decay        = _to_float(tr.get("weight_decay", 0.0))
 
         # ----------------------
         # LSTM parameters
@@ -55,17 +55,17 @@ class Config:
         lstm = cfg_dict.get("lstm", {})
         self.hidden_dim = _to_int(lstm.get("hidden_dim"))
         self.num_layers = _to_int(lstm.get("num_layers"))
-        self.dropout    = _to_float(lstm.get("dropout"))
+        self.dropout    = _to_float(lstm.get("dropout", 0.0))
         self.seq_len    = _to_int(lstm.get("seq_len"))
 
         # ----------------------
         # MLP parameters
         # ----------------------
         mlp = cfg_dict.get("mlp", {})
-        self.mlp_batch_size   = _to_int(mlp.get("batch_size"))
-        self.mlp_weight_decay = _to_float(mlp.get("weight_decay"))
-        self.hidden_layers    = mlp.get("hidden_layers")
-        self.mlp_dropout      = _to_float(mlp.get("dropout"))
+        self.mlp_batch_size   = _to_int(mlp.get("batch_size", self.batch_size))
+        self.mlp_weight_decay = _to_float(mlp.get("weight_decay", self.weight_decay))
+        self.hidden_layers    = mlp.get("hidden_layers", mlp.get("hidden_dims", [128, 64]))
+        self.mlp_dropout      = _to_float(mlp.get("dropout", 0.0))
 
         # ----------------------
         # XGBoost parameters
@@ -85,6 +85,27 @@ class Config:
         self.mlr_rf_n_estimators = _to_int(mlr_rf.get("n_estimators", 100))
         self.mlr_rf_max_depth    = _to_int(mlr_rf.get("max_depth", 8))
         self.mlr_rf_n_jobs       = _to_int(mlr_rf.get("n_jobs", -1))
+
+        # ----------------------
+        # AutoEncoder parameters
+        # ----------------------
+        ae = cfg_dict.get("autoencoder", {})
+        self.ae_latent_dim = _to_int(ae.get("latent_dim", 256))
+
+        # ----------------------
+        # ConvLSTM parameters
+        # ----------------------
+        clstm = cfg_dict.get("convlstm", {})
+        self.clstm_hidden_channels = _to_int(clstm.get("hidden_channels", 32))
+
+        # ----------------------
+        # RCAN parameters
+        # ----------------------
+        rcan = cfg_dict.get("rcan", {})
+        self.rcan_n_feat    = _to_int(rcan.get("n_feat", 32))
+        self.rcan_n_groups  = _to_int(rcan.get("n_groups", 5))
+        self.rcan_n_rcab    = _to_int(rcan.get("n_rcab", 6))
+        self.rcan_reduction = _to_int(rcan.get("reduction", 8))
 
         # ----------------------
         # Region
@@ -116,12 +137,14 @@ class Config:
         self.data_LMDZ35_path   = str(paths["data_LMDZ35_path"])
         self.data_LMDZ250_path  = str(paths["data_LMDZ250_path"])
         self.altitude_path      = str(paths["altitude_path"])
-        self.soil_moisture_path = str(paths["soil_moisture_path"])
-        self.soiltile_path      = str(paths["soiltile_path"])
         self.shp_path           = str(paths["shp_path"])
         self.shp_regions_path   = str(paths["shp_regions_path"])
-        self.tsol_path          = str(paths["tsol_path"])
         self.model_save_dir     = str(paths["model_save_dir"])
+        self.target_evap_path   = str(paths.get("target_evap_path", ""))
+        
+        self.soil_moisture_path = paths.get("soil_moisture_path")
+        self.soiltile_path      = paths.get("soiltile_path")
+        self.tsol_path          = paths.get("tsol_path")
 
         # Results go in results/<MODEL_TYPE>/<conf_name>/
         base_results = str(paths["results_dir"])

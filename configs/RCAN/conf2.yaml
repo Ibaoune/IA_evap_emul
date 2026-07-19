@@ -1,0 +1,18 @@
+# RCAN — conf2: Lightweight RCAN
+general:
+  model_type: rcan
+  conf_name: conf2
+
+training:
+  learning_rate: 1e-4
+  epochs: 150
+  batch_size: 128
+  early_stopping_max: 20
+  scheduler_patience: 10
+  weight_decay: 1e-4
+
+rcan:
+  n_feat: 16
+  n_groups: 3
+  n_rcab: 4
+  reduction: 4

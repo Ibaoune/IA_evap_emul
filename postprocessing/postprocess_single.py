@@ -78,12 +78,54 @@ def main():
     vprint(f"=== Single-model postprocessing  |  {model_name}  {conf_name} ===")
 
     # ------------------------------------------------------------------
-    # Load NC predictions saved by training
+    # Load predictions pickle saved by training
     # ------------------------------------------------------------------
+    preds_path = os.path.join(cfg.path_out, f"{cfg.model_type}_preds.pkl")
+    with open(preds_path, "rb") as f:
+        saved = pickle.load(f)
+
+    model_preds      = saved["model_preds"]
+    nlat, nlon       = saved["nlat"], saved["nlon"]
+    lat_fine         = saved["lats"]
+    lon_fine         = saved["lons"]
+
+    time_test_list = sorted(set(
+        t for entry in model_preds for t in entry["te_df"]["time"]
+    ))
+    time_index = {t: i for i, t in enumerate(time_test_list)}
+    n_time     = len(time_test_list)
+    time_test  = np.array(time_test_list)
+
+    Y_pred    = np.full((n_time, nlat, nlon), np.nan)
+    Y_test_np = np.full((n_time, nlat, nlon), np.nan)
+
+    for entry in model_preds:
+        te   = entry["te_df"]
+        pred = entry["pred"]
+        ti   = te["time"].map(time_index).values
+        li   = int(te["lat_idx"].iloc[0])
+        lo   = int(te["lon_idx"].iloc[0])
+
+        n = min(len(ti), len(pred))
+        Y_pred[ti[:n], li, lo]    = pred[:n]
+        Y_test_np[ti[:n], li, lo] = te["target"].values[:n]
+    
+    morocco_mask_fine = build_morocco_mask(lat_fine, lon_fine, cfg.shp_regions_path)
+    Y_pred[:,    ~morocco_mask_fine] = np.nan
+    Y_test_np[:, ~morocco_mask_fine] = np.nan
+
+    # Create xr DataArrays
+    pred_da = xr.DataArray(Y_pred, dims=["time","lat","lon"], coords={"time": time_test, "lat": lat_fine, "lon": lon_fine})
+    obs_da  = xr.DataArray(Y_test_np, dims=["time","lat","lon"], coords={"time": time_test, "lat": lat_fine, "lon": lon_fine})
+    
+    # Save NC for postprocess_compare.py
+    ds_out = xr.Dataset({"evap_pred": pred_da, "evap_obs": obs_da})
+    ds_out["evap_pred"].attrs["units"] = "mm/day"
+    ds_out["evap_obs"].attrs["units"]  = "mm/day"
+    ds_out.attrs["model"] = model_name
     nc_path = os.path.join(cfg.path_out, f"{model_name}_ET_predictions.nc")
-    ds      = xr.open_dataset(nc_path)
-    pred_da = ds["evap_pred"]   # (time, lat, lon)
-    obs_da  = ds["evap_obs"]    # (time, lat, lon)
+    ds_out.to_netcdf(nc_path)
+    vprint(f"Saved NC file: {nc_path}")
 
     # ------------------------------------------------------------------
     # Valid Morocco points + stack

@@ -1,0 +1,17 @@
+general:
+  model_type: mlr_rf
+
+mlr_rf:
+  n_estimators: 10
+  max_depth: 5
+
+dates:
+  train:
+    start: 2004
+    end: 2004
+  val:
+    start: 2005
+    end: 2005
+  test:
+    start: 2006
+    end: 2006

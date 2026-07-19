@@ -1,0 +1,17 @@
+Model: RCAN
+
+conf0.yaml
+Baseline RCAN configuration. Employs a standard number of residual channel attention blocks (RCAB) and reduction ratios. Used as the reference spatial super-resolution experiment.
+
+conf1.yaml
+This test significantly deepens the network (more groups and RCABs) and widens the feature maps. The technical logic is to leverage maximum spatial context and inter-channel dependencies, aiming for much better spatial structure and accurate capture of extremes.
+
+conf2.yaml
+This test restricts the network to a lightweight RCAN architecture with fewer blocks. The goal is to reduce overfitting on the limited training years, potentially yielding better stability during training and improved performance across all regions.
+
+
+conf_test_available_data.yaml
+This is a first lightweight test using ONLY the data currently available on the HPC (LMDZ predictors, LAI, Albedo, Evaporation target).
+The 'soil moisture', 'tsol', and 'soiltile' predictors are INTENTIONALLY EXCLUDED for now because their NetCDF files have not been transferred/extracted yet.
+The goal of this test is to quickly validate the pipeline (imports, data loading, preprocessing, output writing) without crashing on missing data.
+It is extremely small (short period, few epochs/trees) and should be run on CPU first before launching any heavy experiments.

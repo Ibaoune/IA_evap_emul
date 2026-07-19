@@ -1,0 +1,14 @@
+# AutoEncoder — conf0
+general:
+  model_type: autoencoder
+
+training:
+  learning_rate: 1e-4
+  epochs: 100
+  batch_size: 128
+  early_stopping_max: 15
+  scheduler_patience: 5
+  weight_decay: 1e-4
+
+autoencoder:
+  latent_dim: 256

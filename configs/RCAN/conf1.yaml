@@ -1,0 +1,18 @@
+# RCAN — conf1: Deeper network (more groups and blocks)
+general:
+  model_type: rcan
+  conf_name: conf1
+
+training:
+  learning_rate: 5e-5
+  epochs: 200
+  batch_size: 64
+  early_stopping_max: 30
+  scheduler_patience: 10
+  weight_decay: 5e-4
+
+rcan:
+  n_feat: 64
+  n_groups: 8
+  n_rcab: 10
+  reduction: 16

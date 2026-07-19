@@ -21,7 +21,11 @@ mkdir -p results logs
 echo "Starting CPU test for EVAP models"
 echo "Date: $(date)"
 
-# Test run with one of the models, e.g. MLP
-python train.py --config configs/MLP/conf1.yaml
+# Get config from arguments or default to XGB conf0
+CONFIG="${1:-configs/XGB/conf0.yaml}"
+echo "[INFO] Running CPU training with config: $CONFIG"
+
+# Run the training script
+python train.py --config "$CONFIG"
 
 echo "Test completed at: $(date)"
