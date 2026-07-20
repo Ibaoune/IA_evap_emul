@@ -110,7 +110,7 @@ def main():
         Y_pred[ti[:n], li, lo]    = pred[:n]
         Y_test_np[ti[:n], li, lo] = te["target"].values[:n]
     
-    morocco_mask_fine = build_morocco_mask(lat_fine, lon_fine, cfg.shp_regions_path)
+    morocco_mask_fine = build_morocco_mask(lat_fine, lon_fine, cfg.shp_path)
     Y_pred[:,    ~morocco_mask_fine] = np.nan
     Y_test_np[:, ~morocco_mask_fine] = np.nan
 
