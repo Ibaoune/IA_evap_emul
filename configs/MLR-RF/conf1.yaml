@@ -1,0 +1,8 @@
+# MLR-RF — conf1: more trees, deeper
+general:
+  model_type: mlr_rf
+
+mlr_rf:
+  n_estimators: 300
+  max_depth: 12
+  n_jobs: -1
