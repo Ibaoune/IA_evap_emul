@@ -10,6 +10,7 @@ import sys
 import numpy as np
 import pandas as pd
 from scipy.ndimage import distance_transform_edt
+import xarray as xr
 
 # Allow imports from project root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -118,8 +119,6 @@ def add_static_fields(datasets, evap_lmdz35, altitude_2d, soiltile_tiles):
     Interpolate altitude and soiltile to fine grid and broadcast to (T, lat, lon).
     Adds 'altitude', 'soiltile_bare', 'soiltile_short', 'soiltile_tall' to datasets.
     """
-    import xarray as xr
-    import numpy as np
 
     T_all = len(evap_lmdz35.time_counter)
 
