@@ -67,26 +67,6 @@ def _load_variables(cfg):
         altitude_2d  : xr.DataArray          (raw DEM, not yet interpolated)
     """
     # load Radiation and humidity variable
-<<<<<<< HEAD
-    vprint("Skipping LMDZ250 radiation and humidity... (missing predictor)")
-    ds_rad = xr.open_dataset(os.path.join(cfg.data_LMDZ250_path, "LMDZ_rad_q2m_surface.nc"))
-    ds_rad = mask_dataset(ds_rad, "q2m_radiation").sortby("lat")
-    swnet, lwnet = compute_net_radiation(ds_rad)
-
-    # load Temperature, pressure, wind
-    vprint("Loading LMDZ250 temperature, pressure, wind...")
-    t2m_ds  = _load_lmdz("t2m-hist1.nc",   "t2m",  cfg.data_LMDZ250_path)
-    pres_ds = _load_lmdz("pres-hist2.nc",   "pres", cfg.data_LMDZ250_path)
-    u10m_ds = _load_lmdz("u10m-hist1.nc",   "u10m", cfg.data_LMDZ250_path)
-    v10m_ds = _load_lmdz("v10m-hist1.nc",   "v10m", cfg.data_LMDZ250_path)
-
-    # load LMDZ250 evaporation (coarse grid predictor)
-    vprint("Loading LMDZ250 evaporation (coarse grid predictor)...")
-    evap_lmdz250 = mask_dataset(
-        xr.open_dataset(os.path.join(cfg.data_LMDZ250_path, "evap-hist1.nc")), "evap"
-    )["evap"]
-
-=======
     vprint("Loading LMDZ250 radiation and humidity...")
     ds_rad = xr.open_dataset(os.path.join(cfg.data_LMDZ250_path, "LMDZ_rad_q2m_surface.nc"))
     swnet, lwnet = compute_net_radiation(ds_rad)
@@ -104,13 +84,12 @@ def _load_variables(cfg):
     # load LMDZ250 evaporation (coarse grid predictor)
     vprint("Loading LMDZ250 evaporation (predictor)...")
     evap250_ds = _load_lmdz("evap-hist1.nc", "evap", cfg.data_LMDZ250_path)
->>>>>>> origin/melaabar
     # load soil moisture variables
     mrso, mrsos = None, None
     if cfg.soil_moisture_path:
         vprint("Loading soil moisture...")
-        mrso  = _load_soil(cfg, "mrso_day_IPSL-CM6A-LR_amip_r1i1p1f1_gr_19790101-20141231.nc",  "mrso")
-        mrsos = _load_soil(cfg, "mrsos_day_IPSL-CM6A-LR_amip_r1i1p1f1_gr_19790101-20141231.nc", "mrsos")
+        mrso  = _load_soil(cfg, "mrso.nc",  "mrso")
+        mrsos = _load_soil(cfg, "mrsos.nc", "mrsos")
     else:
         vprint("WARNING: soil_moisture_path is missing/commented. Skipping mrso and mrsos.")
 
@@ -136,17 +115,13 @@ def _load_variables(cfg):
     tsol = None
     if cfg.tsol_path:
         vprint("Loading soil temperature (tsol)...")
-        tsol = mask_dataset(xr.open_dataset(os.path.join(cfg.tsol_path, "tsol_1979_2014.nc")), "tsol")["tsol"]
+        tsol = mask_dataset(xr.open_dataset(os.path.join(cfg.tsol_path, "tsol.nc")), "tsol")["tsol"]
     else:
         vprint("WARNING: tsol_path is missing/commented. Skipping tsol.")
 
     coarse_vars = {
         "t2m":          t2m_ds,
-<<<<<<< HEAD
-        "q2m":          ds_rad["q2m"],
-=======
         "q2m":          q2m,
->>>>>>> origin/melaabar
         "swnet":        swnet,
         "lwnet":        lwnet,
         "pres":         pres_ds,
