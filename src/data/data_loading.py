@@ -146,7 +146,13 @@ def _load_variables(cfg):
         elif "latitude" in da.dims:
             coarse_vars[name] = da.sortby("latitude")
 
-    return coarse_vars, evap_lmdz35, altitude_2d
+    soiltile_tiles = None
+    if cfg.soiltile_path:
+        soiltile_tiles = _load_soiltile(cfg)
+    else:
+        vprint("WARNING: soiltile_path is missing/commented. Skipping soiltile.")
+
+    return coarse_vars, evap_lmdz35, altitude_2d, soiltile_tiles
 
 
 # -------------------------------------------------------
@@ -155,13 +161,7 @@ def _load_variables(cfg):
 def load_datasets_fine(cfg):
     vprint("=== Loading datasets (fine grid) ===")
 
-    coarse_vars, evap_lmdz35, altitude_2d = _load_variables(cfg)
-    
-    soiltile_tiles = None
-    if cfg.soiltile_path:
-        soiltile_tiles = _load_soiltile(cfg)
-    else:
-        vprint("WARNING: soiltile_path is missing/commented. Skipping soiltile.")
+    coarse_vars, evap_lmdz35, altitude_2d, soiltile_tiles = _load_variables(cfg)
 
     vprint("Reindexing predictors to fine LMDZ35 grid (nearest)...")
     datasets = regrid_to_fine(coarse_vars, evap_lmdz35)
