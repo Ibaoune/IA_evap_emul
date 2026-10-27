@@ -13,5 +13,5 @@ def build_xgb(cfg):
         early_stopping_rounds = 20,
         eval_metric           = "rmse",
         verbosity             = 0,
-        random_state          = 42,
+        random_state          = cfg.seed,
     )

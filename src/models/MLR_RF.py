@@ -9,6 +9,6 @@ def build_mlr_rf(cfg):
         n_estimators = cfg.mlr_rf_n_estimators,
         max_depth    = cfg.mlr_rf_max_depth,
         n_jobs       = cfg.mlr_rf_n_jobs,
-        random_state = 42,
+        random_state = cfg.seed,
     )
     return lr, rf

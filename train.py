@@ -22,7 +22,7 @@ from src.core.config               import load_config
 from src.data.data_loading         import load_datasets_fine
 from src.data.preprocessing        import preprocess_data
 from src.core.training             import PointWiseTrain, SpatialTrain
-from src.core.utils                import vprint, set_verbose
+from src.core.utils                import vprint, set_verbose, set_seed
 
 
 def main():
@@ -34,6 +34,7 @@ def main():
     args = parser.parse_args()
 
     cfg = load_config(config_path=args.config, train_mode=True)
+    set_seed(cfg.seed)
     
     if args.dry_run:
         print("--- DRY RUN MODE ENABLED ---")

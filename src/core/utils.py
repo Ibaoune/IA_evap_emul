@@ -1,4 +1,5 @@
 import os
+import random
 import numpy as np
 import torch
 import xarray as xr
@@ -19,6 +20,21 @@ def set_verbose(flag: bool):
 def vprint(*args, **kwargs):
     if _VERBOSE:
         print(*args, **kwargs)
+
+
+# ==========================================================
+# Reproducibility
+# ==========================================================
+
+def set_seed(seed, deterministic=False):
+    """Seed python, numpy and torch (CPU + all GPUs)."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    if deterministic:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark     = False
 
 
 # ==========================================================

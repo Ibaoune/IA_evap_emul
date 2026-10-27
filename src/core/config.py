@@ -38,6 +38,7 @@ class Config:
         # ----------------------
         self.verbose    = _to_bool(cfg_dict["general"].get("verbose", True))
         self.model_type = str(cfg_dict["general"].get("model_type", "lstm"))
+        self.seed       = _to_int(cfg_dict["general"].get("seed", 42))
 
         # ----------------------
         # Training
