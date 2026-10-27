@@ -23,6 +23,7 @@ from src.data.data_loading         import load_datasets_fine
 from src.data.preprocessing        import preprocess_data
 from src.core.training             import PointWiseTrain, SpatialTrain
 from src.core.utils                import vprint, set_verbose, set_seed
+from src.core.plots                import plot_mean_maps
 
 
 def main():
@@ -103,6 +104,16 @@ def main():
             "times_fine": times,
         }, f)
     vprint(f"Predictions saved: {preds_path}")
+
+    # ------------------------------------------------------------------
+    # Quick-look maps: mean observed | mean predicted | bias
+    # (a plotting error must not lose the training results above)
+    # ------------------------------------------------------------------
+    try:
+        maps_path = plot_mean_maps(cfg, model_preds, lats, lons, nlat, nlon)
+        vprint(f"Mean maps saved: {maps_path}")
+    except Exception as e:
+        vprint(f"WARNING: could not plot mean maps ({e})")
 
     vprint("=== Training completed ===")
 
