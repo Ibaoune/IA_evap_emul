@@ -8,7 +8,7 @@ import pandas as pd
 # Allow imports from project root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.core.utils import vprint, mask_dataset
-from src.data.preprocessing import regrid_to_fine, add_static_fields, _fill_nan_nearest, compute_net_radiation
+from src.data.preprocessing import regrid_to_fine, add_static_fields, _fill_nan_nearest, compute_net_radiation, convert_evap_units
 
 # -------------------------------------------------------
 #  Low-level helpers
@@ -79,7 +79,8 @@ def _load_variables(cfg):
 
     # load LMDZ250 evaporation (coarse grid predictor)
     vprint("Loading LMDZ250 evaporation (predictor)...")
-    evap250_ds = _load_lmdz("evap-hist1.nc", "evap", cfg.data_LMDZ250_path)
+    evap250_ds = _load_lmdz("evap-hist1.nc", "evap", cfg.data_LMDZ250_path) * 86400   # kg/m2/s -> mm/day
+
     # load soil moisture variables
     mrso, mrsos = None, None
     if cfg.soil_moisture_path:
@@ -93,7 +94,7 @@ def _load_variables(cfg):
     vprint("Loading target evaporation...")
     evap_lmdz35 = xr.open_dataset(os.path.join(cfg.data_LMDZ35_path, "evap_1979_2014_MA.nc"))["evap"]
     evap_lmdz35 = mask_dataset(evap_lmdz35.to_dataset(), "evap")["evap"]
-    evap_lmdz35 = evap_lmdz35.sortby("lat")
+    evap_lmdz35 = convert_evap_units(evap_lmdz35.sortby("lat"))
 
     # load albedo and LAI
     vprint("Loading albedo and LAI...")
