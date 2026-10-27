@@ -259,7 +259,7 @@ def SpatialTrain(cfg,
     elif cfg.model_type == "convlstm":
         model = ConvLSTM(in_channels=INPUT_SHAPE[0], hidden_channels=cfg.clstm_hidden_channels, out_channels=n_out)
         is_seq = True
-        seq_len = cfg.seq_len if hasattr(cfg, 'seq_len') and cfg.seq_len is not None else 7
+        seq_len = cfg.clstm_seq_len
     elif cfg.model_type == "rcan":
         model = RCAN(INPUT_SHAPE, OUTPUT_SHAPE, n_feat=cfg.rcan_n_feat, n_groups=cfg.rcan_n_groups, n_rcab=cfg.rcan_n_rcab, reduction=cfg.rcan_reduction, out_channels=n_out)
         is_seq = False

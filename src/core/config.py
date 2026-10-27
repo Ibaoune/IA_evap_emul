@@ -104,6 +104,7 @@ class Config:
         # ----------------------
         clstm = cfg_dict.get("convlstm", {})
         self.clstm_hidden_channels = _to_int(clstm.get("hidden_channels", 32))
+        self.clstm_seq_len         = _to_int(clstm.get("seq_len", 7))
 
         # ----------------------
         # RCAN parameters
