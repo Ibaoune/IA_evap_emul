@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from src.core.config               import load_config
 from src.data.data_loading         import load_datasets_fine
-from src.data.preprocessing        import preprocess_dataPointwise
+from src.data.preprocessing        import preprocess_data
 from src.core.training             import PointWiseTrain, SpatialTrain
 from src.core.utils                import vprint, set_verbose
 
@@ -64,7 +64,7 @@ def main():
         X_val,   Y_val,   T_val,
         X_test,  Y_test,  T_test,
         channel_names, nlat, nlon, lats, lons, times, morocco_mask,
-    ) = preprocess_dataPointwise(cfg, X_all, Y_all, times, lats, lons, channel_names)
+    ) = preprocess_data(cfg, X_all, Y_all, times, lats, lons, channel_names)
 
     # ------------------------------------------------------------------
     # Train

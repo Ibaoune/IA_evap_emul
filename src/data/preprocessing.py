@@ -60,21 +60,11 @@ def _fill_nan_nearest(da):
     return da.copy(data=values)
 
 
-# ==========================================================
-# Morocco mask
-# ==========================================================
-def build_mask(lats, lons, shp_path):
-    """
-    Thin wrapper around utils.build_morocco_mask.
-    Kept here so all preprocessing calls go through this module.
-    """
-    return build_morocco_mask(lats, lons, shp_path)
-
 
 # ==========================================================
 # Main point-wise preprocessing entry point
 # ==========================================================
-def preprocess_dataPointwise(cfg, X_all, Y_all, times, lats, lons, channel_names):
+def preprocess_data(cfg, X_all, Y_all, times, lats, lons, channel_names):
     """
     Full preprocessing pipeline for point-wise models (LSTM, MLP, XGB, MLR-RF):
       1. Build Morocco land mask
@@ -85,7 +75,7 @@ def preprocess_dataPointwise(cfg, X_all, Y_all, times, lats, lons, channel_names
     T, nlat, nlon, nfeat = X_all.shape
 
     vprint("Building Morocco land mask...")
-    morocco_mask = build_mask(lats, lons, cfg.shp_path)
+    morocco_mask = build_morocco_mask(lats, lons, cfg.shp_path)
 
     vprint("Splitting data by year...")
     (
