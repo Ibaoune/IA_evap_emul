@@ -87,9 +87,11 @@ class BernoulliGammaLoss(BaseLoss):
         return self._reduce(loss_map)
 
     def predict(self, raw):
-        # E[y] = p * shape * scale
-        occ = torch.sigmoid(raw[:, 0])
-        return (occ * torch.exp(raw[:, 1]) * torch.exp(raw[:, 2])).clamp(min=0)
+        # E[y] = p * shape * scale  (same clamp as forward, to stay consistent and avoid inf)
+        occ   = torch.sigmoid(raw[:, 0])
+        shape = torch.exp(raw[:, 1].clamp(-20.0, 20.0))
+        scale = torch.exp(raw[:, 2].clamp(-20.0, 20.0))
+        return (occ * shape * scale).clamp(min=0)
 
 
 # ==========================================================
