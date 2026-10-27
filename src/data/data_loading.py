@@ -15,7 +15,9 @@ from src.data.preprocessing import regrid_to_fine, add_static_fields, _fill_nan_
 # -------------------------------------------------------
 
 def _load_lmdz(filename, varname, path):
-    ds  = xr.open_dataset(os.path.join(path, filename))
+    # time_counter_bnds is unused and holds corrupt year-0 values in some files
+    # (albedo, LAI), which trigger cftime CF/Serialization warnings on decode.
+    ds  = xr.open_dataset(os.path.join(path, filename), drop_variables=["time_counter_bnds"])
     var = mask_dataset(ds, varname)[varname]
     return var.sortby("lat")
 
