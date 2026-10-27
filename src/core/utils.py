@@ -153,14 +153,25 @@ def load_model(cfg, model):
 # ==========================================================
 
 class EarlyStopper:
-    def __init__(self, patience=20, min_delta=0.001):
+    def __init__(self, patience=20, min_delta=0.1):
+        """
+        min_delta is a percentage of the best val loss: an epoch counts as an
+        improvement if val_loss < best - (min_delta / 100) * |best|.
+        Independent of the loss type and of the target units.
+        """
         self.patience     = patience
-        self.min_delta    = min_delta
+        self.min_delta    = min_delta / 100
         self.counter      = 0
         self.min_val_loss = float('inf')
 
     def early_stop(self, val_loss):
-        if val_loss < self.min_val_loss - self.min_delta:
+        if self.min_val_loss == float('inf'):
+            threshold = float('inf')        # first epoch always counts as an improvement
+        else:
+            # abs(): Bernoulli-Gamma loss can be negative
+            threshold = self.min_val_loss - self.min_delta * abs(self.min_val_loss)
+
+        if val_loss < threshold:
             self.min_val_loss = val_loss
             self.counter = 0
         else:

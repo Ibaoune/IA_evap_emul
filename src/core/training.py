@@ -125,7 +125,7 @@ def PointWiseTrain(cfg,
                 opt, mode="min", factor=0.5, patience=cfg.scheduler_patience, min_lr=1e-6)
             loader = DataLoader(TensorDataset(Xtr_t, ytr_t),
                                 batch_size=bs, shuffle=True, drop_last=True)
-            early_stopper = EarlyStopper(patience=cfg.early_stopping_max, min_delta=0.001)
+            early_stopper = EarlyStopper(patience=cfg.early_stopping_max, min_delta=cfg.min_delta)
             best_val, best_w = float('inf'), None
 
             train_losses_pt, val_losses_pt = [], []
@@ -273,7 +273,7 @@ def SpatialTrain(cfg,
     optimizer = optim.Adam(model.parameters(), lr=cfg.learning_rate, weight_decay=cfg.weight_decay)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=cfg.scheduler_patience, min_lr=1e-6)
-    early_stopper = EarlyStopper(patience=cfg.early_stopping_max, min_delta=0.005)
+    early_stopper = EarlyStopper(patience=cfg.early_stopping_max, min_delta=cfg.min_delta)
 
     best_val_loss = float('inf')
     best_w = None

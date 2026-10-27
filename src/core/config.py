@@ -50,6 +50,7 @@ class Config:
         if self.loss_type not in LOSSES:
             raise ValueError(f"Unknown loss_type '{self.loss_type}'. Available: {sorted(LOSSES)}")
         self.early_stopping_max  = _to_int(tr.get("early_stopping_max", 5))
+        self.min_delta           = _to_float(tr.get("min_delta", 0.1))   # % of best val loss
         self.scheduler_patience  = _to_int(tr.get("scheduler_patience", 3))
         self.weight_decay        = _to_float(tr.get("weight_decay", 0.0))
 

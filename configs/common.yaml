@@ -13,6 +13,7 @@ training:
   batch_size: 128
   loss_type: bernoulli_gamma   # one of: bernoulli_gamma, mse, mae, huber (see src/core/losses.py)
   early_stopping_max: 30
+  min_delta: 0.1   # 0.1 means: val loss must improve by at least 0.1 % of the best val loss
   scheduler_patience: 10
   weight_decay: 8e-5
 

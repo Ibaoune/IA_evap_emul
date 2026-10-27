@@ -8,6 +8,7 @@ training:
   epochs: 150
   batch_size: 256
   early_stopping_max: 30
+  min_delta: 0.1   # 0.1 means: val loss must improve by at least 0.1 % of the best val loss
   scheduler_patience: 10
   weight_decay: 5e-5
 
