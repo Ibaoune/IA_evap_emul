@@ -5,7 +5,6 @@ import xarray as xr
 import geopandas as gpd
 from shapely.geometry import Point
 from shapely.ops import unary_union
-import torch.nn as nn
 
 
 # ==========================================================
@@ -150,38 +149,6 @@ def load_model(cfg, model):
 
 
 # ==========================================================
-# Loss functions
-# ==========================================================
-
-class BernoulliGammaLossPointwise(nn.Module):
-    def __init__(self):
-        super(BernoulliGammaLossPointwise, self).__init__()
-
-    def forward(self, true, pred):
-        # true: (B,)   pred: (B, 3)
-        # Prevent negative values which cause NaN in torch.log(true + epsilon)
-        true = torch.clamp(true, min=0.0)
-        
-        occurrence      = pred[:, 0]
-        shape_parameter = torch.exp(pred[:, 1])
-        scale_parameter = torch.exp(pred[:, 2])
-        bool_rain       = (true > 0).float()
-        epsilon         = 1e-6
-
-        loss = -(
-            (1 - bool_rain) * torch.log(1 - occurrence + epsilon) +
-            bool_rain * (
-                torch.log(occurrence + epsilon) +
-                (shape_parameter - 1) * torch.log(true + epsilon) -
-                shape_parameter * torch.log(scale_parameter + epsilon) -
-                torch.lgamma(shape_parameter + epsilon) -
-                true / (scale_parameter + epsilon)
-            )
-        )
-        return loss.mean()
-
-
-# ==========================================================
 # Early stopping
 # ==========================================================
 
@@ -202,54 +169,8 @@ class EarlyStopper:
 
 
 # ==========================================================
-# Spatial Loss & Dataset
+# Spatial sequence dataset
 # ==========================================================
-
-class BernoulliGammaLossSpatial(nn.Module):
-    def __init__(self, mask=None):
-        """
-        mask : bool tensor (LAT, LON) — True inside Morocco.
-               If provided, loss is averaged only over valid pixels.
-        """
-        super(BernoulliGammaLossSpatial, self).__init__()
-        if mask is not None:
-            self.register_buffer('mask', mask.float())
-        else:
-            self.mask = None
-
-    def forward(self, true, pred):
-        true = true.squeeze(1)                           # (B, H, W)
-        
-        # Replace NaNs in true with 0 and prevent negative values which cause NaN in torch.log
-        true = torch.nan_to_num(true, nan=0.0).clamp(min=0.0)
-
-        if self.mask is not None:
-            # Zero out predictions and target outside the mask to prevent inf/nan from blowing up
-            pred = pred * self.mask.unsqueeze(0).unsqueeze(0)
-            true = true * self.mask.unsqueeze(0)
-
-        occurrence      = pred[:, 0, :, :]
-        # Clamp to prevent torch.exp() overflow
-        shape_parameter = torch.exp(torch.clamp(pred[:, 1, :, :], max=20.0, min=-20.0))
-        scale_parameter = torch.exp(torch.clamp(pred[:, 2, :, :], max=20.0, min=-20.0))
-        bool_rain       = (true > 0).float()
-        epsilon         = 1e-6
-
-        loss_map = -(                                    # (B, H, W)
-            (1 - bool_rain) * torch.log(1 - occurrence + epsilon) +
-            bool_rain * (
-                torch.log(occurrence + epsilon) +
-                (shape_parameter - 1) * torch.log(true + epsilon) -
-                shape_parameter * torch.log(scale_parameter + epsilon) -
-                torch.lgamma(shape_parameter + epsilon) -
-                true / (scale_parameter + epsilon)
-            )
-        )
-
-        if self.mask is not None:
-            return (loss_map * self.mask).sum() / (self.mask.sum() * loss_map.shape[0])
-        return loss_map.mean()
-
 
 class SequenceDataset(torch.utils.data.Dataset):
     def __init__(self, X_np, Y_np, seq_len):

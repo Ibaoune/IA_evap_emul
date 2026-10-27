@@ -24,7 +24,8 @@ from src.models.MLR_RF import build_mlr_rf
 from src.models.AutoEncoder import AutoEncoder
 from src.models.ConvLSTM import ConvLSTM
 from src.models.RCAN import RCAN
-from src.core.utils import BernoulliGammaLossPointwise, BernoulliGammaLossSpatial, SequenceDataset, EarlyStopper, vprint
+from src.core.utils import SequenceDataset, EarlyStopper, vprint
+from src.core.losses import build_loss
 
 
 # ==========================================================
@@ -44,7 +45,7 @@ def PointWiseTrain(cfg,
     """
     vprint(f"Starting point-wise {cfg.model_type.upper()} training...")
 
-    criterion        = BernoulliGammaLossPointwise()
+    criterion        = build_loss(cfg.loss_type).to(cfg.device)
     model_preds      = []
     all_train_losses = []
     all_val_losses   = []
@@ -84,7 +85,8 @@ def PointWiseTrain(cfg,
             Xte_t = torch.tensor(Xte_np, dtype=torch.float32)
 
             m = PointLSTM(input_dim=len(feature_names), hidden_dim=cfg.hidden_dim,
-                          num_layers=cfg.num_layers, dropout=cfg.dropout).to(cfg.device)
+                          num_layers=cfg.num_layers, dropout=cfg.dropout,
+                          out_channels=criterion.n_outputs).to(cfg.device)
 
         elif cfg.model_type == "mlp":
             Xtr_t = torch.tensor(xtr, dtype=torch.float32)
@@ -94,7 +96,8 @@ def PointWiseTrain(cfg,
             Xte_t = torch.tensor(xte, dtype=torch.float32)
 
             m = PointMLP(input_dim=len(feature_names), hidden_dims=cfg.hidden_layers,
-                         dropout=cfg.mlp_dropout).to(cfg.device)
+                         dropout=cfg.mlp_dropout,
+                         out_channels=criterion.n_outputs).to(cfg.device)
 
         elif cfg.model_type == "xgb":
             m = build_xgb(cfg)
@@ -155,11 +158,8 @@ def PointWiseTrain(cfg,
                 m.load_state_dict(best_w)
             m.eval()
             with torch.no_grad():
-                raw_te = m(Xte_t.to(cfg.device)).cpu().numpy()
-                raw_tr = m(Xtr_t.to(cfg.device)).cpu().numpy()
-
-            pred    = (raw_te[:, 0] * np.exp(raw_te[:, 1]) * np.exp(raw_te[:, 2])).clip(min=0)
-            tr_pred = (raw_tr[:, 0] * np.exp(raw_tr[:, 1]) * np.exp(raw_tr[:, 2])).clip(min=0)
+                pred    = criterion.predict(m(Xte_t.to(cfg.device))).cpu().numpy()
+                tr_pred = criterion.predict(m(Xtr_t.to(cfg.device))).cpu().numpy()
 
             all_train_losses.append(train_losses_pt)
             all_val_losses.append(val_losses_pt)
@@ -233,16 +233,20 @@ def SpatialTrain(cfg,
     INPUT_SHAPE = (X_tr.shape[1], nlat, nlon)
     OUTPUT_SHAPE = (1, nlat, nlon)
 
+    mask_tensor = torch.BoolTensor(morocco_mask).to(cfg.device)
+    criterion   = build_loss(cfg.loss_type, mask=mask_tensor).to(cfg.device)
+    n_out       = criterion.n_outputs
+
     # ── model-specific setup ──
     if cfg.model_type == "autoencoder":
-        model = AutoEncoder(INPUT_SHAPE, OUTPUT_SHAPE, latent_dim=cfg.ae_latent_dim)
+        model = AutoEncoder(INPUT_SHAPE, OUTPUT_SHAPE, latent_dim=cfg.ae_latent_dim, out_channels=n_out)
         is_seq = False
     elif cfg.model_type == "convlstm":
-        model = ConvLSTM(in_channels=INPUT_SHAPE[0], hidden_channels=cfg.clstm_hidden_channels)
+        model = ConvLSTM(in_channels=INPUT_SHAPE[0], hidden_channels=cfg.clstm_hidden_channels, out_channels=n_out)
         is_seq = True
         seq_len = cfg.seq_len if hasattr(cfg, 'seq_len') and cfg.seq_len is not None else 7
     elif cfg.model_type == "rcan":
-        model = RCAN(INPUT_SHAPE, OUTPUT_SHAPE, n_feat=cfg.rcan_n_feat, n_groups=cfg.rcan_n_groups, n_rcab=cfg.rcan_n_rcab, reduction=cfg.rcan_reduction)
+        model = RCAN(INPUT_SHAPE, OUTPUT_SHAPE, n_feat=cfg.rcan_n_feat, n_groups=cfg.rcan_n_groups, n_rcab=cfg.rcan_n_rcab, reduction=cfg.rcan_reduction, out_channels=n_out)
         is_seq = False
     else:
         raise ValueError(f"Unknown spatial model type: {cfg.model_type}")
@@ -265,9 +269,6 @@ def SpatialTrain(cfg,
     train_loader = DataLoader(train_ds, batch_size=cfg.batch_size, shuffle=True)
     val_loader   = DataLoader(val_ds, batch_size=cfg.batch_size, shuffle=False)
     test_loader  = DataLoader(test_ds, batch_size=cfg.batch_size, shuffle=False)
-
-    mask_tensor = torch.BoolTensor(morocco_mask).to(cfg.device)
-    criterion = BernoulliGammaLossSpatial(mask=mask_tensor)
 
     optimizer = optim.Adam(model.parameters(), lr=cfg.learning_rate, weight_decay=cfg.weight_decay)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -327,11 +328,7 @@ def SpatialTrain(cfg,
     all_preds_te = []
     with torch.no_grad():
         for xb, _ in test_loader:
-            pred_raw = model(xb.to(cfg.device)).cpu()
-            occ = pred_raw[:, 0]
-            shp = torch.exp(pred_raw[:, 1])
-            scl = torch.exp(pred_raw[:, 2])
-            all_preds_te.append((occ * shp * scl).numpy().clip(min=0))
+            all_preds_te.append(criterion.predict(model(xb.to(cfg.device))).cpu().numpy())
     pred_te = np.concatenate(all_preds_te, axis=0)  # (T_te, nlat, nlon)
 
     # ── Package into model_preds same format as PointWiseTrain ──

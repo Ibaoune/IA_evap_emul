@@ -33,22 +33,20 @@ class ConvLSTM(nn.Module):
     Paper: 4-layer stacked ConvLSTM
       Layers 1–3 : 64 filters, 5×5 kernel
       Layer  4   : 1×1 conv (output head)
-    Modification: output head → 3 channels for Bernoulli-Gamma loss.
+    Modification: output head → `out_channels` raw channels, set by the loss.
     Input : (B, T, C, H, W)
-    Output: (B, 3, H, W)     — (occurrence, log-shape, log-scale)
+    Output: (B, out_channels, H, W)
     """
-    def __init__(self, in_channels, hidden_channels=32, kernel_size=5):
+    def __init__(self, in_channels, hidden_channels=32, kernel_size=5, out_channels=3):
         super().__init__()
         h = hidden_channels
         self.cell1 = ConvLSTMCell(in_channels, h, kernel_size)  # layer 1
         self.cell2 = ConvLSTMCell(h,           h, kernel_size)  # layer 2
         self.cell3 = ConvLSTMCell(h,           h, kernel_size)  # layer 3
 
-        # Layer 4 — 1×1 conv output head (3 channels for Bernoulli-Gamma)
-        self.drop = nn.Dropout2d(0.2)  
-        self.tail_occ   = nn.Conv2d(h, 1, 1)   # occurrence probability
-        self.tail_shape = nn.Conv2d(h, 1, 1)   # log-shape parameter
-        self.tail_scale = nn.Conv2d(h, 1, 1)   # log-scale parameter
+        # Layer 4 — 1×1 conv output head
+        self.drop = nn.Dropout2d(0.2)
+        self.tail = nn.Conv2d(h, out_channels, 1)
 
     def forward(self, x):
         B, T, C, H, W = x.shape
@@ -63,7 +61,4 @@ class ConvLSTM(nn.Module):
             h3, c3 = self.cell3(self.drop(h2), h3, c3)   # ← and here
 
         # Predictions from last hidden state
-        p_occ   = torch.sigmoid(self.tail_occ(h3))   # ∈ (0,1)
-        p_shape = self.tail_shape(h3)                 # log-shape (exp later)
-        p_scale = self.tail_scale(h3)                 # log-scale (exp later)
-        return torch.cat([p_occ, p_shape, p_scale], dim=1)  # (B, 3, H, W)
+        return self.tail(h3)                          # (B, out_channels, H, W)

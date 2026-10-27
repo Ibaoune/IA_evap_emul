@@ -39,10 +39,11 @@ class ResidualGroup(nn.Module):
 
 class RCAN(nn.Module):
     def __init__(self, input_shape, output_shape,
-                 n_feat=64, n_groups=10, n_rcab=20, reduction=16):
+                 n_feat=64, n_groups=10, n_rcab=20, reduction=16, out_channels=3):
         """
         input_shape  : (C, lat, lon)
         output_shape : (1, lat, lon)
+        out_channels : number of raw output channels (set by the loss)
         """
         super().__init__()
         self.output_shape = output_shape
@@ -67,16 +68,11 @@ class RCAN(nn.Module):
         )
 
         # Tail
-        self.tail_occ   = nn.Conv2d(n_feat, 1, 3, padding=1)  # occurrence
-        self.tail_shape = nn.Conv2d(n_feat, 1, 3, padding=1)  # log-shape
-        self.tail_scale = nn.Conv2d(n_feat, 1, 3, padding=1)  # log-scale
+        self.tail = nn.Conv2d(n_feat, out_channels, 3, padding=1)
 
     def forward(self, x):
         head = self.head(x)
         body = self.body_end(self.body(head))
         out  = head + body
         out  = self.upsample(out)
-        p1 = torch.sigmoid(self.tail_occ(out))   # occurrence in [0,1]
-        p2 = self.tail_shape(out)                # log-shape
-        p3 = self.tail_scale(out)                # log-scale
-        return torch.cat((p1, p2, p3), dim=1)   # (B, 3, lat_f, lon_f)
+        return self.tail(out)                    # (B, out_channels, lat_f, lon_f)

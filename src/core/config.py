@@ -2,6 +2,8 @@ import yaml
 import torch
 import os
 
+from src.core.losses import LOSSES
+
 
 def _to_int(x):
     return int(x) if x is not None else None
@@ -44,7 +46,9 @@ class Config:
         self.learning_rate       = _to_float(tr.get("learning_rate", 0.001))
         self.epochs              = _to_int(tr.get("epochs", 2))
         self.batch_size          = _to_int(tr.get("batch_size", 32))
-        self.loss_type           = str(tr.get("loss_type", "MSE"))
+        self.loss_type           = str(tr.get("loss_type", "bernoulli_gamma")).lower()
+        if self.loss_type not in LOSSES:
+            raise ValueError(f"Unknown loss_type '{self.loss_type}'. Available: {sorted(LOSSES)}")
         self.early_stopping_max  = _to_int(tr.get("early_stopping_max", 5))
         self.scheduler_patience  = _to_int(tr.get("scheduler_patience", 3))
         self.weight_decay        = _to_float(tr.get("weight_decay", 0.0))

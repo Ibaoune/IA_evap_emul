@@ -11,7 +11,7 @@ training:
   learning_rate: 1e-4
   epochs: 10
   batch_size: 128
-  loss_type: BernoulliGamma
+  loss_type: bernoulli_gamma   # one of: bernoulli_gamma, mse, mae, huber (see src/core/losses.py)
   early_stopping_max: 30
   scheduler_patience: 10
   weight_decay: 8e-5
@@ -19,10 +19,10 @@ training:
 dates:
   train:
     start: 1979
-    end: 1979
+    end: 1985
   val:
     start: 2004
-    end: 2004
+    end: 2006
   test:
     start: 2009
     end: 2009
@@ -47,13 +47,13 @@ paths:
   #results_dir:         "/srv/data/mohammad.elaabaribao/work/interns/y2026/evap/ds_evap_intern/results"
 
   # Paths for Hamza's environment
-  data_LMDZ35_path:    "/home/hamza/Desktop/projects/Projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/LMDZOR_35"
-  data_LMDZ250_path:   "/home/hamza/Desktop/projects/Projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/LMDZOR_250"
-  altitude_path:       "/home/hamza/Desktop/projects/Projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/topography"
-  soil_moisture_path:  "/home/hamza/Desktop/projects/Projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/soil_moisture"
-  soiltile_path:       "/home/hamza/Desktop/projects/Projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/soil_type"
-  shp_path:            "/home/hamza/Desktop/projects/Projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/morocco_complet_shapefiles"
-  shp_regions_path:    "/home/hamza/Desktop/projects/Projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/shapefiles_by_region"
-  tsol_path:           "/home/hamza/Desktop/projects/Projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/soil_temperature"
+  data_LMDZ35_path:    "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/LMDZOR_35"
+  data_LMDZ250_path:   "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/LMDZOR_250"
+  altitude_path:       "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/topography"
+  soil_moisture_path:  "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/soil_moisture"
+  soiltile_path:       "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/soil_type"
+  shp_path:            "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/morocco_complet_shapefiles"
+  shp_regions_path:    "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/shapefiles_by_region"
+  tsol_path:           "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/soil_temperature"
   model_save_dir:      "models"
   results_dir:         "results"
