@@ -7,6 +7,7 @@ general:
   verbose: true
   model_type: xgb    # overridden by each model config
   seed: 42           # same seed + same conf = same results; change it to measure run-to-run variability
+  save_model: "no"   # "yes" = save trained weights in results/<model>/<conf>/, "no" = do not save
 
 training:
   learning_rate: 1e-4

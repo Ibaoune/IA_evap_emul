@@ -1,5 +1,6 @@
 import os
 import random
+import joblib
 import numpy as np
 import torch
 import xarray as xr
@@ -130,37 +131,71 @@ def inspect(datasets):
 # Model save / load
 # ==========================================================
 
+def _model_path(cfg):
+    ext = "joblib" if cfg.model_type in ("xgb", "mlr_rf") else "pth"
+    return os.path.join(cfg.path_out, f"{cfg.model_type}_model.{ext}")
+
+
+def _state_dict_cpu(m):
+    return {k: v.detach().cpu() for k, v in m.state_dict().items()}
+
+
 def save_model(cfg, model, train_losses=None, val_losses=None):
-    """Save model checkpoint under model_save_dir/<model_type>/."""
-    save_dir = os.path.join(cfg.model_save_dir, cfg.model_type)
-    os.makedirs(save_dir, exist_ok=True)
+    """
+    Save trained weights next to the predictions: results/<model_type>/<conf_name>/.
 
-    model_path = os.path.join(save_dir, f"{cfg.model_type}_downscaling.pth")
-    torch.save(
-        {
-            "model_state_dict": model.state_dict(),
-            "train_losses":     train_losses,
-            "val_losses":       val_losses,
-            "config":           vars(cfg),
-        },
-        model_path,
-    )
-    vprint(f"Model saved at: {model_path}")
-    return model_path
+    model : a single torch model (spatial models), or a dict
+            {(lat_idx, lon_idx): model} (point-wise models, one model per pixel).
+    Torch models -> <model_type>_model.pth (state_dicts + losses + config),
+    XGB / MLR-RF -> <model_type>_model.joblib (fitted estimators).
+    """
+    path = _model_path(cfg)
+    if cfg.model_type in ("xgb", "mlr_rf"):
+        joblib.dump(model, path)
+    else:
+        if isinstance(model, dict):
+            weights = {k: _state_dict_cpu(m) for k, m in model.items()}
+        else:
+            weights = _state_dict_cpu(model)
+        torch.save(
+            {
+                "model_state_dict": weights,
+                "train_losses":     train_losses,
+                "val_losses":       val_losses,
+                "config":           {k: (str(v) if isinstance(v, torch.device) else v)
+                                     for k, v in vars(cfg).items()},
+            },
+            path,
+        )
+    vprint(f"Model saved at: {path}")
+    return path
 
 
-def load_model(cfg, model):
-    """Load trained model checkpoint."""
-    save_dir   = os.path.join(cfg.model_save_dir, cfg.model_type)
-    model_path = os.path.join(save_dir, f"{cfg.model_type}_downscaling.pth")
+def load_model(cfg, model=None):
+    """
+    Load weights saved by save_model.
 
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model not found: {model_path}")
+    XGB / MLR-RF : returns the dict {(lat_idx, lon_idx): estimator}.
+    Torch        : pass an instantiated `model` to load a spatial checkpoint into it;
+                   for point-wise models, the dict of state_dicts is returned.
+    Returns (model, train_losses, val_losses).
+    """
+    path = _model_path(cfg)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Model not found: {path}")
 
-    checkpoint = torch.load(model_path, map_location="cpu")
-    model.load_state_dict(checkpoint["model_state_dict"], strict=False)
+    if cfg.model_type in ("xgb", "mlr_rf"):
+        vprint(f"Model loaded from: {path}")
+        return joblib.load(path), None, None
 
-    vprint(f"Model loaded from: {model_path}")
+    checkpoint = torch.load(path, map_location="cpu")
+    weights    = checkpoint["model_state_dict"]
+    if model is not None:
+        model.load_state_dict(weights)
+    else:
+        model = weights
+
+    vprint(f"Model loaded from: {path}")
     return model, checkpoint.get("train_losses"), checkpoint.get("val_losses")
 
 

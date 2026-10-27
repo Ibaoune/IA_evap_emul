@@ -1,6 +1,7 @@
 # RCAN — conf1: Deeper network (more groups and blocks)
 general:
   model_type: rcan
+  save_model: "yes"   # "yes" = save trained weights in results/<model>/<conf>/, "no" = do not save
   conf_name: conf1
 
 training:

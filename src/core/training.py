@@ -24,7 +24,7 @@ from src.models.MLR_RF import build_mlr_rf
 from src.models.AutoEncoder import AutoEncoder
 from src.models.ConvLSTM import ConvLSTM
 from src.models.RCAN import RCAN
-from src.core.utils import SequenceDataset, EarlyStopper, vprint
+from src.core.utils import SequenceDataset, EarlyStopper, vprint, save_model
 from src.core.losses import build_loss
 
 
@@ -49,6 +49,7 @@ def PointWiseTrain(cfg,
     model_preds      = []
     all_train_losses = []
     all_val_losses   = []
+    saved_models     = {}                # (lat_idx, lon_idx) -> model, filled only if cfg.save_model
     start            = time.time()
 
     valid_points = [(i, j) for i in range(nlat) for j in range(nlon) if morocco_mask[i, j]]
@@ -169,6 +170,9 @@ def PointWiseTrain(cfg,
         else:
             best_val_log = ""
 
+        if cfg.save_model:
+            saved_models[(li, lj)] = (lr, rf) if cfg.model_type == "mlr_rf" else m
+
         # ── build te_df & store result ────────────────────────────────
         # pred covers every test day for all point-wise models (LSTM uses val context)
         te_df  = pd.DataFrame({
@@ -192,6 +196,9 @@ def PointWiseTrain(cfg,
             eta     = (elapsed / (idx + 1)) * (n_points - idx - 1)
             vprint(f"  [{idx+1}/{n_points}] lat={lats[li]:.2f} lon={lons[lj]:.2f} "
                    f"| {best_val_log}{elapsed:.1f}min ETA {eta:.1f}min")
+
+    if cfg.save_model:
+        save_model(cfg, saved_models, all_train_losses, all_val_losses)
 
     vprint(f"{cfg.model_type.upper()} point-wise training done.")
     return model_preds, all_train_losses, all_val_losses
@@ -330,6 +337,9 @@ def SpatialTrain(cfg,
         model.load_state_dict(best_w)
 
     vprint(f"Training completed in {(time.time() - start_time)/60:.1f} minutes")
+
+    if cfg.save_model:
+        save_model(cfg, model, all_train_losses, all_val_losses)
 
     # ── Inference on whole domain ──
     model.eval()

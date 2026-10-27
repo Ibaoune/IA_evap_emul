@@ -1,6 +1,7 @@
 # ConvLSTM — conf2: Very short sequence, fast execution
 general:
   model_type: convlstm
+  save_model: "yes"   # "yes" = save trained weights in results/<model>/<conf>/, "no" = do not save
   conf_name: conf2
 
 training:

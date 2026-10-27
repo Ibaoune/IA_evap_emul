@@ -1,6 +1,7 @@
 # AutoEncoder — conf1: Larger latent dimension
 general:
   model_type: autoencoder
+  save_model: "yes"   # "yes" = save trained weights in results/<model>/<conf>/, "no" = do not save
   conf_name: conf1
 
 training:

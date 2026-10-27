@@ -1,6 +1,7 @@
 # RCAN — conf0
 general:
   model_type: rcan
+  save_model: "yes"   # "yes" = save trained weights in results/<model>/<conf>/, "no" = do not save
 
 training:
   learning_rate: 1e-4
