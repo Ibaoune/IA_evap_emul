@@ -74,8 +74,10 @@ def PointWiseTrain(cfg,
         if cfg.model_type == "lstm":
             Xtr_np, ytr_np = make_sequences(xtr, ytr, seq_len=cfg.seq_len)
             Xva_np, yva_np = make_sequences(xva, yva, seq_len=cfg.seq_len)
-            context        = np.concatenate([xva[-cfg.seq_len:], xte], axis=0)
-            ycontext       = np.concatenate([yva[-cfg.seq_len:], yte], axis=0)
+            # last seq_len-1 val days as context -> one prediction per test day
+            n_ctx          = cfg.seq_len - 1
+            context        = np.concatenate([xva[len(xva) - n_ctx:], xte], axis=0)
+            ycontext       = np.concatenate([yva[len(yva) - n_ctx:], yte], axis=0)
             Xte_np, _      = make_sequences(context, ycontext, seq_len=cfg.seq_len)
 
             Xtr_t = torch.tensor(Xtr_np, dtype=torch.float32)
@@ -168,10 +170,10 @@ def PointWiseTrain(cfg,
             best_val_log = ""
 
         # ── build te_df & store result ────────────────────────────────
-        offset = cfg.seq_len if cfg.model_type == "lstm" else 0
+        # pred covers every test day for all point-wise models (LSTM uses val context)
         te_df  = pd.DataFrame({
-            "time":    T_test[offset:],
-            "target":  yte[offset:],
+            "time":    T_test,
+            "target":  yte,
             "lat_idx": li,
             "lon_idx": lj,
         })
@@ -182,7 +184,7 @@ def PointWiseTrain(cfg,
             "te_df":    te_df,
             "pred":     pred,
             "tr_pred":  tr_pred,
-            "tr_target": ytr,
+            "tr_target": ytr_np if cfg.model_type == "lstm" else ytr,
         })
 
         if (idx + 1) % 100 == 0 or (idx + 1) == n_points:
@@ -264,7 +266,7 @@ def SpatialTrain(cfg,
         train_ds = SequenceDataset(X_tr, Y_train, seq_len)
         val_ds   = SequenceDataset(X_va, Y_val, seq_len)
         test_ds  = SequenceDataset(X_te, Y_test, seq_len)
-        te_offset = seq_len
+        te_offset = seq_len - 1
     else:
         # Standard TensorDataset
         train_ds = TensorDataset(torch.FloatTensor(X_tr), torch.FloatTensor(Y_train).unsqueeze(1))

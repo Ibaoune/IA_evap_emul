@@ -190,9 +190,10 @@ class SequenceDataset(torch.utils.data.Dataset):
         self.seq = seq_len
 
     def __len__(self):
-        return len(self.X) - self.seq
+        return len(self.X) - self.seq + 1
 
     def __getitem__(self, i):
+        # window ends at the target day (inclusive): same-day predictors are used
         x = torch.FloatTensor(self.X[i : i + self.seq])
-        y = torch.FloatTensor(self.Y[i + self.seq]).unsqueeze(0)
+        y = torch.FloatTensor(self.Y[i + self.seq - 1]).unsqueeze(0)
         return x, y

@@ -31,7 +31,8 @@ def make_sequences(X_vals, y_vals, seq_len=7):
     X_vals = X_vals.astype(np.float32)
     y_vals = y_vals.astype(np.float32)
     X_seq, y_seq = [], []
-    for i in range(seq_len, len(X_vals)):
-        X_seq.append(X_vals[i - seq_len: i])
+    # window ends at day i (inclusive): same-day predictors are used to predict y[i]
+    for i in range(seq_len - 1, len(X_vals)):
+        X_seq.append(X_vals[i - seq_len + 1: i + 1])
         y_seq.append(y_vals[i])
     return np.array(X_seq), np.array(y_seq)
