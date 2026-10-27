@@ -216,16 +216,22 @@ def SpatialTrain(cfg,
     X_te = X_test.transpose(0, 3, 1, 2).copy()
 
     EPS = 1e-8
-    # ── per-pixel temporal normalization (fit on train only) ──
-    # Skip one-hot or mask channels if we want, but for now we normalize everything
-    # except masks which are usually 0/1. Let's just normalize channels strictly.
+    # ── normalization (fit on train only) ──
+    # Time-varying channels: per-pixel temporal normalization.
+    # Static channels (altitude, soiltile, ...) have zero temporal std, so per-pixel
+    # normalization would turn them into 0 everywhere; normalize them globally over
+    # the Morocco pixels instead to keep their spatial pattern.
     for c in range(X_tr.shape[1]):
-        name = feature_names[c]
-        if name in ["land_mask", "soiltile_bare", "soiltile_short", "soiltile_tall", "month_sin", "month_cos"]:
-            continue
-        mean_map = X_tr[:, c, :, :].mean(axis=0)
-        std_map  = X_tr[:, c, :, :].std(axis=0)
-        std_map  = np.where(std_map < EPS, 1.0, std_map)
+        # exact equality: float32 std of a constant field is not exactly 0
+        if np.allclose(X_tr[:, c], X_tr[0, c], rtol=1e-6, atol=0, equal_nan=True):
+            land     = X_tr[0, c][morocco_mask]
+            mean_map = land.mean()
+            std_map  = land.std() if land.std() >= EPS else 1.0
+            vprint(f"  {feature_names[c]}: static channel, normalized globally")
+        else:
+            mean_map = X_tr[:, c, :, :].mean(axis=0)
+            std_map  = X_tr[:, c, :, :].std(axis=0)
+            std_map  = np.where(std_map < EPS, 1.0, std_map)
         X_tr[:, c, :, :] = (X_tr[:, c, :, :] - mean_map) / std_map
         X_va[:, c, :, :] = (X_va[:, c, :, :] - mean_map) / std_map
         X_te[:, c, :, :] = (X_te[:, c, :, :] - mean_map) / std_map
