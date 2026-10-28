@@ -1,7 +1,7 @@
 """
 src/utils.py
 ============
-Shared helpers: load NC predictions, build valid Morocco points,
+Shared helpers: build valid Morocco points,
 stack DataArrays, build region point indices.
 """
 
@@ -12,24 +12,6 @@ import xarray as xr
 import geopandas as gpd
 from shapely.ops import unary_union
 from shapely.geometry import Point
-
-
-# ==========================================================
-# Load predictions NC
-# ==========================================================
-
-def load_predictions(nc_path, pred_var="evap_pred", obs_var="evap_obs"):
-    """
-    Load a NetCDF file saved by train.py / postprocessing.py.
-
-    Returns:
-        pred_da : xr.DataArray  (time, lat, lon)
-        obs_da  : xr.DataArray  (time, lat, lon)
-    """
-    ds      = xr.open_dataset(nc_path)
-    pred_da = ds[pred_var]
-    obs_da  = ds[obs_var]
-    return pred_da, obs_da
 
 
 # ==========================================================

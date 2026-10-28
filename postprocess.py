@@ -3,15 +3,12 @@ postprocess.py
 ==============
 Postprocessing of trained models, in two modes:
 
-Predictions are always read from the training pickle
-results/<model>/<conf>/<model>_preds.pkl (no intermediate file needed).
+Predictions are always read directly from the training pickle
+results/<model>/<conf>/<model>_preds.pkl (no intermediate file is written).
 
 1. Single-model evaluation (main + extreme) for ONE config.
 
        python postprocess.py --config configs/xgb/conf0.yaml
-
-   Add --save-nc to also export the gridded predictions as
-   results/<model>/<conf>/<model>_ET_predictions.nc
 
    Outputs saved in:
        postprocessing/results/<model>/<conf>/main/
@@ -176,18 +173,7 @@ def _build_prediction_grids(cfg):
     return obs_da, pred_da
 
 
-def _save_netcdf(cfg, obs_da, pred_da):
-    """Export gridded obs/pred as <model_type>_ET_predictions.nc in cfg.path_out."""
-    ds_out = xr.Dataset({"evap_pred": pred_da, "evap_obs": obs_da})
-    ds_out["evap_pred"].attrs["units"] = "mm/day"
-    ds_out["evap_obs"].attrs["units"]  = "mm/day"
-    ds_out.attrs["model"] = cfg.model_type.upper()
-    nc_path = os.path.join(cfg.path_out, f"{cfg.model_type}_ET_predictions.nc")
-    ds_out.to_netcdf(nc_path)
-    vprint(f"Saved NC file: {nc_path}")
-
-
-def run_single(config_path, save_nc=False):
+def run_single(config_path):
     cfg = load_config(config_path=config_path, train_mode=False)
     set_verbose(cfg.verbose)
 
@@ -210,8 +196,6 @@ def run_single(config_path, save_nc=False):
     # Load predictions pickle saved by training
     # ------------------------------------------------------------------
     obs_da, pred_da = _build_prediction_grids(cfg)
-    if save_nc:
-        _save_netcdf(cfg, obs_da, pred_da)
 
     # ------------------------------------------------------------------
     # Per-pixel metrics
@@ -348,12 +332,10 @@ def main():
                        help="Intercompare all configs of one model type, e.g. xgb")
     group.add_argument("--all", action="store_true",
                        help="Intercompare all configs of all model types")
-    parser.add_argument("--save-nc", action="store_true",
-                        help="With --config: also export <model_type>_ET_predictions.nc")
     args = parser.parse_args()
 
     if args.config:
-        run_single(args.config, save_nc=args.save_nc)
+        run_single(args.config)
         return
 
     if args.configs:
