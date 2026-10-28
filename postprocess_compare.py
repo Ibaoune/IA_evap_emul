@@ -6,7 +6,7 @@ Intercomparison across multiple trained model configs.
 Usage:
     # Compare specific configs
     python postprocess_compare.py \
-        --configs configs/XGB/conf0.yaml configs/XGB/conf1.yaml configs/LSTM/conf0.yaml
+        --configs configs/xgb/conf0.yaml configs/xgb/conf1.yaml configs/lstm/conf0.yaml
 
     # Compare ALL configs of one model
     python postprocess_compare.py --model xgb
@@ -15,7 +15,7 @@ Usage:
     python postprocess_compare.py --all
 
 Outputs saved in:
-    results/intercomparison/<run_label>/
+    postprocessing/results/intercomparison/<run_label>/
 """
 
 import os
@@ -26,12 +26,12 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 
-import sys
 from pathlib import Path
 
-# Go up one directory (to the project root)
-ROOT = Path(__file__).resolve().parent.parent
+# Project root (for src/) and postprocessing/ (for the postproc package)
+ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "postprocessing"))
 
 from src.core.config import load_config
 from src.core.utils import vprint, set_verbose, build_morocco_mask
@@ -58,7 +58,7 @@ def _load_all_for_config(config_path):
     model_name = cfg.model_type.upper()
     label      = f"{model_name} {cfg.conf_name}"
 
-    nc_path = os.path.join(cfg.path_out, f"{model_name}_ET_predictions.nc")
+    nc_path = os.path.join(cfg.path_out, f"{cfg.model_type}_ET_predictions.nc")
     if not os.path.exists(nc_path):
         print(f"  [SKIP] NC not found: {nc_path}")
         return None
@@ -112,9 +112,7 @@ def main():
         config_paths = args.configs
     elif args.model:
         config_paths = sorted(glob.glob(
-            os.path.join("configs", args.model.upper(), "*.yaml")
-        )) or sorted(glob.glob(
-            os.path.join("configs", args.model, "*.yaml")
+            os.path.join("configs", args.model.lower(), "*.yaml")
         ))
     elif args.all:
         config_paths = sorted(glob.glob(os.path.join("configs", "*", "*.yaml")))
@@ -145,8 +143,8 @@ def main():
     colors = DEFAULT_COLORS[:len(labels)]
 
     # Output dir
-    run_label = "_vs_".join(l.replace(" ", "_") for l in labels)
-    postprocessing_dir = os.path.dirname(os.path.abspath(__file__))
+    run_label = "_vs_".join(l.replace(" ", "_") for l in labels).lower()
+    postprocessing_dir = os.path.join(ROOT, "postprocessing")
     path_out = os.path.join(postprocessing_dir, "results", "intercomparison", run_label)
     os.makedirs(path_out, exist_ok=True)
     print(f"\nOutputs → {path_out}")

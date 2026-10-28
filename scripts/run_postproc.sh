@@ -11,10 +11,8 @@ for conf in configs/*/*.yaml; do
     echo "---------------------------------------------------------"
     echo " Processing: $conf"
     echo "---------------------------------------------------------"
-    # Extract model and conf from the path (e.g., configs/AutoEncoder/conf1.yaml)
+    # Extract model and conf from the path (e.g., configs/autoencoder/conf1.yaml)
     model=$(basename $(dirname "$conf"))
-    # lowercase the model name
-    model=$(echo "$model" | tr '[:upper:]' '[:lower:]')
     conf_name=$(basename "$conf" .yaml)
     
     # Check if the .pkl file exists
@@ -24,7 +22,7 @@ for conf in configs/*/*.yaml; do
         continue
     fi
     
-    /home/mohammad.elaabaribao/.conda/envs/clean_env_Pytorch/bin/python postprocessing/postprocess_single.py --config "$conf"
+    /home/mohammad.elaabaribao/.conda/envs/clean_env_Pytorch/bin/python postprocess_single.py --config "$conf"
 done
 
 echo "========================================================="

@@ -4,11 +4,11 @@ postprocess_single.py
 Run full evaluation (main + extreme) for ONE model config.
 
 Usage:
-    python postprocess_single.py --config configs/XGB/conf0.yaml
+    python postprocess_single.py --config configs/xgb/conf0.yaml
 
 Outputs saved in:
-    results/main/<model>/<conf>/
-    results/extreme/<model>/<conf>/
+    postprocessing/results/<model>/<conf>/main/
+    postprocessing/results/<model>/<conf>/extreme/
 """
 
 import os
@@ -20,14 +20,12 @@ import pandas as pd
 import xarray as xr
 import geopandas as gpd
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-import sys
 from pathlib import Path
 
-# Go up one directory (to the project root)
-ROOT = Path(__file__).resolve().parent.parent
+# Project root (for src/) and postprocessing/ (for the postproc package)
+ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "postprocessing"))
 
 from src.core.config import load_config
 from src.core.utils import vprint, set_verbose, build_morocco_mask
@@ -50,25 +48,26 @@ from postproc.extreme.plots_extreme import (
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True,
-                        help="Path to model config yaml, e.g. configs/XGB/conf0.yaml")
+                        help="Path to model config yaml, e.g. configs/xgb/conf0.yaml")
     args = parser.parse_args()
 
     cfg = load_config(config_path=args.config, train_mode=False)
     set_verbose(cfg.verbose)
 
-    model_name = cfg.model_type.upper()
+    model_type = cfg.model_type
+    model_name = model_type.upper()   # display label for plot titles
     conf_name  = cfg.conf_name
 
     # Output dirs
     #main
-    postprocessing_dir = os.path.dirname(os.path.abspath(__file__))
-    path_main         = os.path.join(postprocessing_dir, "results", model_name, conf_name, "main")
+    postprocessing_dir = os.path.join(ROOT, "postprocessing")
+    path_main         = os.path.join(postprocessing_dir, "results", model_type, conf_name, "main")
     path_metrics_dist = os.path.join(path_main, "metric_distribution")
     path_et_dist      = os.path.join(path_main, "et_distribution")
     os.makedirs(path_metrics_dist, exist_ok=True)
     os.makedirs(path_et_dist,      exist_ok=True)
     #extrem
-    path_extreme         = os.path.join(postprocessing_dir, "results", model_name, conf_name, "extreme")
+    path_extreme         = os.path.join(postprocessing_dir, "results", model_type, conf_name, "extreme")
     path_extreme_metrics = os.path.join(path_extreme, "metric_distribution")
     os.makedirs(path_extreme_metrics, exist_ok=True)
 
@@ -123,7 +122,7 @@ def main():
     ds_out["evap_pred"].attrs["units"] = "mm/day"
     ds_out["evap_obs"].attrs["units"]  = "mm/day"
     ds_out.attrs["model"] = model_name
-    nc_path = os.path.join(cfg.path_out, f"{model_name}_ET_predictions.nc")
+    nc_path = os.path.join(cfg.path_out, f"{model_type}_ET_predictions.nc")
     ds_out.to_netcdf(nc_path)
     vprint(f"Saved NC file: {nc_path}")
 
