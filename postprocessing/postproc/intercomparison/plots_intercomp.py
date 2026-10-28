@@ -352,7 +352,7 @@ def plot_mean_et_map_intercomp(obs_list, pred_list, lats_list, lons_list,
                            1.4, 1.6, 1.8, 2.0, 2.2, 2.4])
     N_et    = len(et_bounds) - 1
     cmap_et = mpl.colors.ListedColormap(
-        plt.cm.get_cmap("RdYlGn", N_et)(np.linspace(0, 1, N_et))
+        plt.get_cmap("RdYlGn", N_et)(np.linspace(0, 1, N_et))
     )
     norm_et = mpl.colors.BoundaryNorm(boundaries=et_bounds, ncolors=N_et)
     minx, miny, maxx, maxy = gdf_morocco.total_bounds
@@ -418,7 +418,7 @@ def plot_et_seasonal_maps_intercomp(obs_list, pred_list, lats_list, lons_list,
                            1.4, 1.6, 1.8, 2.0, 2.2, 2.4])
     N_et    = len(et_bounds) - 1
     cmap_et = mpl.colors.ListedColormap(
-        plt.cm.get_cmap("RdYlGn", N_et)(np.linspace(0, 1, N_et))
+        plt.get_cmap("RdYlGn", N_et)(np.linspace(0, 1, N_et))
     )
     norm_et = mpl.colors.BoundaryNorm(boundaries=et_bounds, ncolors=N_et)
     minx, miny, maxx, maxy = gdf_morocco.total_bounds
