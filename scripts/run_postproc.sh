@@ -22,7 +22,7 @@ for conf in configs/*/*.yaml; do
         continue
     fi
     
-    /home/mohammad.elaabaribao/.conda/envs/clean_env_Pytorch/bin/python postprocess_single.py --config "$conf"
+    /home/mohammad.elaabaribao/.conda/envs/clean_env_Pytorch/bin/python postprocess.py --config "$conf"
 done
 
 echo "========================================================="
