@@ -1,6 +1,6 @@
 import os
 
-models = ["XGB", "MLP", "LSTM", "MLR-RF", "AutoEncoder", "ConvLSTM", "RCAN"]
+models = ["xgb", "mlp", "lstm", "mlr_rf", "autoencoder", "convlstm", "rcan"]
 
 content = """
 conf_test_available_data.yaml

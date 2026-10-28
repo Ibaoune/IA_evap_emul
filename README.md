@@ -23,21 +23,21 @@ Example commands:
 
 ```bash
 # Train XGBoost (Point-wise)
-python train.py --config configs/XGB/conf0.yaml
+python train.py --config configs/xgb/conf0.yaml
 
 # Train Long Short-Term Memory network (LSTM) (Point-wise)
-python train.py --config configs/LSTM/conf2.yaml
+python train.py --config configs/lstm/conf2.yaml
 
 # Train Spatial Deep Learning Models
-python train.py --config configs/AutoEncoder/conf0.yaml
-python train.py --config configs/ConvLSTM/conf0.yaml
-python train.py --config configs/RCAN/conf0.yaml
+python train.py --config configs/autoencoder/conf0.yaml
+python train.py --config configs/convlstm/conf0.yaml
+python train.py --config configs/rcan/conf0.yaml
 ```
 
 ### Dry-run Mode
 You can quickly validate the data pipeline and model definitions using the `--dry-run` flag. This limits training to 1 epoch and truncates the dataset to a single year.
 ```bash
-python train.py --config configs/AutoEncoder/conf0.yaml --dry-run
+python train.py --config configs/autoencoder/conf0.yaml --dry-run
 ```
 
 The training script will:
@@ -75,7 +75,7 @@ The pipeline ingests a comprehensive set of predictors spanning climate model ou
 
 File paths for these datasets are securely mapped in `configs/common.yaml` and support nested folder structures seamlessly.
 
-Configs follow the structure `configs/<Model_Name>/conf<X>.yaml` so multiple experiments can easily be tracked and queued.
+Configs follow the structure `configs/<model_type>/conf<X>.yaml (lowercase, e.g. `configs/mlr_rf/`)` so multiple experiments can easily be tracked and queued.
 
 **Note on Experiments:**
-Each model configuration folder (e.g., `configs/LSTM/`) contains a `doc.txt` file. This document concisely explains the scientific and technical logic behind each prepared experiment (e.g., `conf0`, `conf1`, `conf2`), the hyperparameters changed, and the expected improvements (better generalization, enhanced temporal memory, etc.) without needing to read the YAML files directly.
+Each model configuration folder (e.g., `configs/lstm/`) contains a `doc.txt` file. This document concisely explains the scientific and technical logic behind each prepared experiment (e.g., `conf0`, `conf1`, `conf2`), the hyperparameters changed, and the expected improvements (better generalization, enhanced temporal memory, etc.) without needing to read the YAML files directly.

@@ -22,7 +22,7 @@ echo "Starting CPU test for EVAP models"
 echo "Date: $(date)"
 
 # Get config from arguments or default to XGB conf0
-CONFIG="${1:-configs/XGB/conf0.yaml}"
+CONFIG="${1:-configs/xgb/conf0.yaml}"
 echo "[INFO] Running CPU training with config: $CONFIG"
 
 # Run the training script

@@ -2,10 +2,10 @@
 Entry point for training.
 
 Usage: run in terminal from project root, e.g.
-    python train.py --config configs/XGB/conf0.yaml
-    python train.py --config configs/MLP/conf1.yaml
-    python train.py --config configs/LSTM/conf2.yaml
-    python train.py --config configs/MLR-RF/conf0.yaml
+    python train.py --config configs/xgb/conf0.yaml
+    python train.py --config configs/mlp/conf1.yaml
+    python train.py --config configs/lstm/conf2.yaml
+    python train.py --config configs/mlr_rf/conf0.yaml
 """
 
 
@@ -29,7 +29,7 @@ from src.core.plots                import plot_mean_maps
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True,
-                        help="Path to model config yaml, e.g. configs/XGB/conf0.yaml")
+                        help="Path to model config yaml, e.g. configs/xgb/conf0.yaml")
     parser.add_argument("--dry-run", action="store_true",
                         help="Run a quick dry run with 1 epoch and 1 year of data")
     args = parser.parse_args()

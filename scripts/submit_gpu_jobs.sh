@@ -1,19 +1,19 @@
 #!/bin/bash
 configs=(
-    "configs/AutoEncoder/conf1.yaml"
-    "configs/AutoEncoder/conf2.yaml"
-    "configs/ConvLSTM/conf1.yaml"
-    "configs/ConvLSTM/conf2.yaml"
-    "configs/LSTM/conf1.yaml"
-    "configs/LSTM/conf2.yaml"
-    "configs/MLP/conf1.yaml"
-    "configs/MLP/conf2.yaml"
-    "configs/MLR-RF/conf1.yaml"
-    "configs/MLR-RF/conf2.yaml"
-    "configs/RCAN/conf1.yaml"
-    "configs/RCAN/conf2.yaml"
-    "configs/XGB/conf1.yaml"
-    "configs/XGB/conf2.yaml"
+    "configs/autoencoder/conf1.yaml"
+    "configs/autoencoder/conf2.yaml"
+    "configs/convlstm/conf1.yaml"
+    "configs/convlstm/conf2.yaml"
+    "configs/lstm/conf1.yaml"
+    "configs/lstm/conf2.yaml"
+    "configs/mlp/conf1.yaml"
+    "configs/mlp/conf2.yaml"
+    "configs/mlr_rf/conf1.yaml"
+    "configs/mlr_rf/conf2.yaml"
+    "configs/rcan/conf1.yaml"
+    "configs/rcan/conf2.yaml"
+    "configs/xgb/conf1.yaml"
+    "configs/xgb/conf2.yaml"
 )
 
 for config in "${configs[@]}"; do

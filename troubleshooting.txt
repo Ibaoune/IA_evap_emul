@@ -12,7 +12,7 @@ Symptôme :
 Le job MLP crachait immédiatement avec une erreur `TypeError` ou `AttributeError` concernant `hidden_layers`.
 
 Cause : 
-Le fichier YAML de configuration (`configs/MLP/conf1.yaml`) utilisait le mot-clé `hidden_dims` au lieu de `hidden_layers`, mais la classe de configuration attendait strictement `hidden_layers`.
+Le fichier YAML de configuration (`configs/mlp/conf1.yaml`) utilisait le mot-clé `hidden_dims` au lieu de `hidden_layers`, mais la classe de configuration attendait strictement `hidden_layers`.
 
 Solution :
 Fichier modifié : `src/core/config.py`
