@@ -11,8 +11,8 @@ results/<model>/<conf>/<model>_preds.pkl (no intermediate file is written).
        python postprocess.py --config configs/xgb/conf0.yaml
 
    Outputs saved in:
-       postprocessing/results/<model>/<conf>/main/
-       postprocessing/results/<model>/<conf>/extreme/
+       postprocessing/results/single/<model>/<conf>/main/
+       postprocessing/results/single/<model>/<conf>/extreme/
 
 2. Intercomparison across multiple trained configs.
 
@@ -182,10 +182,10 @@ def run_single(config_path):
     conf_name  = cfg.conf_name
 
     # Output dirs
-    path_main            = os.path.join(POSTPROCESSING_DIR, "results", model_type, conf_name, "main")
+    path_main            = os.path.join(POSTPROCESSING_DIR, "results", "single", model_type, conf_name, "main")
     path_metrics_dist    = os.path.join(path_main, "metric_distribution")
     path_et_dist         = os.path.join(path_main, "et_distribution")
-    path_extreme         = os.path.join(POSTPROCESSING_DIR, "results", model_type, conf_name, "extreme")
+    path_extreme         = os.path.join(POSTPROCESSING_DIR, "results", "single", model_type, conf_name, "extreme")
     path_extreme_metrics = os.path.join(path_extreme, "metric_distribution")
     for d in (path_metrics_dist, path_et_dist, path_extreme_metrics):
         os.makedirs(d, exist_ok=True)
