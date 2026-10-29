@@ -28,4 +28,4 @@ Based on an exhaustive script inspection of `/home/mohammad.elaabaribao/lustre/c
 *(Note: The `LMDZOR_250.rar` and `LMDZOR_35.rar` mentioned previously do not need extraction because their contents were already found cleanly extracted under `data/models/lmdz/r250/` and `r35/`!)*
 
 ### Configuration Update Summary
-I have updated `configs/common.yaml` to securely point to the found LMDZ, shapefiles, and target evaporation folders. It is now only the 3 missing datasets (soil moisture, tsol, soiltile) that are pointing to the `evap_extracted` target folders, pending your manual extraction.
+I have updated `configs/train/common.yaml` to securely point to the found LMDZ, shapefiles, and target evaporation folders. It is now only the 3 missing datasets (soil moisture, tsol, soiltile) that are pointing to the `evap_extracted` target folders, pending your manual extraction.

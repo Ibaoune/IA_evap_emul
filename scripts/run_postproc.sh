@@ -7,11 +7,11 @@ echo " Starting Post-Processing for all models"
 echo "========================================================="
 
 # Loop through all config files
-for conf in configs/*/*.yaml; do
+for conf in configs/train/*/*.yaml; do
     echo "---------------------------------------------------------"
     echo " Processing: $conf"
     echo "---------------------------------------------------------"
-    # Extract model and conf from the path (e.g., configs/autoencoder/conf1.yaml)
+    # Extract model and conf from the path (e.g., configs/train/autoencoder/conf1.yaml)
     model=$(basename $(dirname "$conf"))
     conf_name=$(basename "$conf" .yaml)
     

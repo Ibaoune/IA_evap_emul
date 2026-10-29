@@ -7,7 +7,7 @@ except ImportError:
     xr = None
     print("WARNING: xarray is not installed. NetCDF inspection will be skipped.")
 
-def load_config(path="configs/common.yaml"):
+def load_config(path="configs/train/common.yaml"):
     with open(path, "r") as f:
         return yaml.safe_load(f)
 

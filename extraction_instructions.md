@@ -41,5 +41,5 @@ If you only have `7za` or `7z`, replace `unrar x` with `7za x` and use the `-o` 
 ## Next Steps
 Once the extraction is successfully finished:
 1. Review the generated `data_inventory.md` file in the project repository to see the expected variables.
-2. Run `python scripts/check_data_paths.py --config configs/common.yaml` to rigorously validate that the NetCDF paths and dimensions are fully intact.
+2. Run `python scripts/check_data_paths.py --config configs/train/common.yaml` to rigorously validate that the NetCDF paths and dimensions are fully intact.
 3. If `check_data_paths.py` reports success, you are cleared to queue the training jobs using SLURM.

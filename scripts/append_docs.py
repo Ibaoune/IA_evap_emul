@@ -11,6 +11,6 @@ It is extremely small (short period, few epochs/trees) and should be run on CPU 
 """
 
 for m in models:
-    path = f"configs/{m}/doc.txt"
+    path = f"configs/train/{m}/doc.txt"
     with open(path, "a") as f:
         f.write("\n" + content)

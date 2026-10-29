@@ -39,7 +39,7 @@ nvidia-smi
 ########################################
 # CONFIG PATH
 ########################################
-CONFIG="${1:-configs/autoencoder/conf0.yaml}"
+CONFIG="${1:-configs/train/autoencoder/conf0.yaml}"
 echo "[INFO] Using config: $CONFIG"
 
 ########################################

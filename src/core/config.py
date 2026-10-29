@@ -164,10 +164,10 @@ class Config:
 
 def load_config(config_path, train_mode=True):
     """
-    Load config by merging configs/common.yaml with the given model config yaml.
+    Load config by merging configs/train/common.yaml with the given model config yaml.
 
     Args:
-        config_path : path to the model-specific yaml, e.g. configs/xgb/conf0.yaml
+        config_path : path to the model-specific yaml, e.g. configs/train/xgb/conf0.yaml
         train_mode  : bool
     """
     # Always load common first
