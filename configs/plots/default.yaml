@@ -1,0 +1,283 @@
+# configs/plots/default.yaml
+# =============================================================================
+# Figure style for postprocess.py (appearance only, so --plot-only is enough).
+# Override files live in overrides/ (e.g. overrides/paper.yaml). Pass one with
+# --plot-config; it is merged on top and may only use keys that exist here.
+#
+# Pattern: shared settings, then per-item blocks that override them:
+#   defaults          -> figures
+#   colorbar_defaults -> colorbars
+# =============================================================================
+
+# ── Saved files ──────────────────────────────────────────────────────────────
+output:
+  format: png            # png, pdf, svg... (pdf/svg for a paper)
+  dpi: 150               # resolution (300 for print)
+  transparent: false     # transparent background instead of white
+
+# ── Fallback values (used when a figure below doesn't list the key) ─────────
+defaults:
+  suptitle_size: 11      # figure title
+  title_size: 9          # panel titles
+  tick_label_size: 7     # x-axis labels
+  tick_rotation: 15      # angle of x-axis labels
+  annotation_size: 7     # numbers written on plots
+  legend_size: 8
+  colorbar_label_size: 9
+  colorbar_tick_size: 7
+  grid_label_size: 5     # lat/lon labels on maps
+  gridlines: true        # lat/lon lines on maps
+  map_margin: 0.3        # degrees around Morocco on maps
+  border_color: black    # Morocco outline
+  border_width: 1.0
+  box_alpha: 0.75        # boxplot opacity (0-1)
+  show_fliers: false     # show boxplot outliers
+
+# ── Colorbars ────────────────────────────────────────────────────────────────
+# Starting settings for every colorbar; each variable in colorbars: can
+# override any of them.
+colorbar_defaults:
+  mode: discrete         # discrete (color classes) | continuous (gradient)
+  bounds: auto           # auto | [0, 0.2, 0.4, ...] | {vmin: 0, vmax: 1, step: 0.1}
+  n_bins: 10             # number of classes when bounds: auto
+  auto_quantiles: null   # auto range: null = ignore outliers, [2, 98] = percentiles
+  symmetric: auto        # center on 0 (auto = only if data has both signs)
+  clip_min: null         # lowest allowed auto bound
+  clip_max: null         # highest allowed auto bound
+  extend: neither        # arrows for out-of-range values: neither | min | max | both
+  tick_format: null      # e.g. "{:.1f}" for 1 decimal
+
+# One entry per mapped variable: label, cmap (matplotlib colormap) and
+# optionally any colorbar_defaults key.
+colorbars: # dictionaries accept any key related to colorbar_defaults, plus label and cmap
+  R2:          {label: "R²",            cmap: RdYlGn}
+  KGE:         {label: "KGE",           cmap: RdYlGn, clip_max: 1.0}
+  NSE:         {label: "NSE",           cmap: RdYlGn}
+  Correlation: {label: "Pearson r",     cmap: RdBu}
+  Bias_pct:    {label: "Bias (%)",      cmap: RdBu_r}
+  RMSE:        {label: "RMSE (mm/day)", cmap: YlOrRd}
+  MAE:         {label: "MAE (mm/day)",  cmap: YlOrRd}
+  MAE_Q95:     {label: "MAE Q95 (mm/day)",   cmap: YlOrRd}
+  MAE_Q99:     {label: "MAE Q99 (mm/day)",   cmap: YlOrRd}
+  MAE_Q995:    {label: "MAE Q99.5 (mm/day)", cmap: YlOrRd} 
+  et_mean:     {label: "Mean ET (mm/day)", cmap: RdYlGn, bounds: {vmin: 0, vmax: 2.4, step: 0.2}, tick_format: "{:.1f}"}
+
+# ── Colors (name or hex) ─────────────────────────────────────────────────────
+colors:
+  obs: "#2C2C2C"         # observations in ET boxplots
+  pred: "#3498DB"        # predictions in ET boxplots
+  metric_box: "#3498DB"  # metric boxplots
+  extreme_box: "#E74C3C" # extreme-metric boxplots
+  median_text: darkred   # median value next to a box
+  bar_text: "#2C3E50"    # values on intercomparison bars
+  seasons: {DJF: "#3498DB", MAM: "#2ECC71", JJA: "#E74C3C", SON: "#E67E22"}
+  regions: {north: "#3498DB", north_east: "#2ECC71", east: "#E67E22", south: "#E74C3C"}
+  models:                # one per model in intercomparison (repeats if more models)
+    - "#2980B9"
+    - "#E67E22"
+    - "#C0392B"
+    - "#8E44AD"
+    - "#27AE60"
+    - "#16A085"
+    - "#2C3E50"
+    - "#F39C12"
+    - "#D35400"
+    - "#1ABC9C"
+    - "#7F8C8D"
+    - "#BDC3C7"
+
+# ── Per-figure settings ──────────────────────────────────────────────────────
+# Names from `python postprocess.py --list-figures`. Each figure lists every
+# setting it uses; edit them here to change only that figure.
+# Sizes in inches: figsize = whole figure, panel_size = one map panel,
+# ncols = panels per row.
+figures:
+  single:
+    spatial_metrics:
+      ncols: 4
+      panel_size: [5, 4.5]
+      suptitle_size: 12
+      title_size: 7.5
+      grid_label_size: 5
+      gridlines: true
+      map_margin: 0.3
+      border_color: black
+      border_width: 1.0
+      colorbar_label_size: 6
+      colorbar_tick_size: 5
+    boxplots_global:
+      figsize: [22, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 8
+      annotation_size: 9
+      box_alpha: 0.75
+      show_fliers: false
+    boxplots_by_season:
+      figsize: [24, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 7
+      tick_rotation: 20
+      annotation_size: 7
+      box_alpha: 0.75
+      show_fliers: false
+    boxplots_by_region:
+      figsize: [24, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 8
+      tick_rotation: 15
+      annotation_size: 7
+      box_alpha: 0.75
+      show_fliers: false
+    et_distribution:
+      figsize: [22, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 8
+      tick_rotation: 15
+      legend_size: 9
+      box_alpha: 0.75
+      show_fliers: false
+    mean_et_map:
+      figsize: [13, 5.5]
+      suptitle_size: 11
+      title_size: 8.5
+      grid_label_size: 6
+      gridlines: true
+      map_margin: 0.3
+      border_color: black
+      border_width: 1.0
+      colorbar_label_size: 9
+      colorbar_tick_size: 7
+    et_seasonal_maps:
+      figsize: [20, 8]
+      suptitle_size: 11
+      title_size: 8.5
+      grid_label_size: 5
+      gridlines: false
+      map_margin: 0.2
+      border_color: black
+      border_width: 0.8
+      colorbar_label_size: 9
+      colorbar_tick_size: 7
+    extreme_spatial:
+      figsize: [18, 5]
+      suptitle_size: 11
+      title_size: 8.5
+      grid_label_size: 6
+      gridlines: true
+      map_margin: 0.3
+      border_color: black
+      border_width: 1.0
+      colorbar_label_size: 7
+      colorbar_tick_size: 6
+    extreme_boxplots:
+      figsize: [13, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 8
+      annotation_size: 9
+      box_alpha: 0.75
+      show_fliers: false
+    extreme_boxplots_by_season:
+      figsize: [15, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 7
+      tick_rotation: 20
+      annotation_size: 7
+      box_alpha: 0.75
+      show_fliers: false
+    extreme_boxplots_by_region:
+      figsize: [15, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 8
+      tick_rotation: 15
+      annotation_size: 7
+      box_alpha: 0.75
+      show_fliers: false
+
+  intercomp:
+    bars_by_region:
+      width_per_model: 1.8       # width = max(min_width, n_models * width_per_model)
+      min_width: 12
+      height: 9
+      bar_alpha: 0.88            # bar opacity (0-1)
+      suptitle_size: 12
+      title_size: 12
+      tick_label_size: 9
+      tick_rotation: 20
+      annotation_size: 8
+      legend_size: 9
+    spatial_metrics:
+      panel_size: [5, 5]         # one panel per model
+      suptitle_size: 11
+      title_size: 7.5
+      grid_label_size: 5
+      gridlines: true
+      map_margin: 0.3
+      border_color: black
+      border_width: 1.0
+      colorbar_label_size: 8
+      colorbar_tick_size: 7
+    boxplots_global:
+      figsize: [24, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 7
+      tick_rotation: 20
+      annotation_size: 7
+      box_alpha: 0.75
+      show_fliers: false
+    boxplots_by_season:
+      figsize: [28, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 7
+      tick_rotation: 15
+      legend_size: 8
+      box_alpha: 0.75
+      show_fliers: false
+    boxplots_by_region:
+      figsize: [28, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 7
+      tick_rotation: 15
+      legend_size: 8
+      box_alpha: 0.75
+      show_fliers: false
+    mean_et_map:
+      panel_size: [5, 5]         # obs panel + one panel per model
+      suptitle_size: 11
+      title_size: 8
+      grid_label_size: 5
+      gridlines: true
+      map_margin: 0.3
+      border_color: black
+      border_width: 1.0
+      colorbar_label_size: 9
+      colorbar_tick_size: 7
+    et_seasonal_maps:
+      panel_size: [5, 5]
+      suptitle_size: 11
+      title_size: 8
+      grid_label_size: 5
+      gridlines: true
+      map_margin: 0.3
+      border_color: black
+      border_width: 1.0
+      colorbar_label_size: 9
+      colorbar_tick_size: 7
+    et_boxplots:
+      figsize: [24, 5]
+      suptitle_size: 11
+      title_size: 9
+      tick_label_size: 7
+      tick_rotation: 15
+      legend_size: 8
+      box_alpha: 0.75
+      show_fliers: false

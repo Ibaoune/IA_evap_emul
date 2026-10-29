@@ -3,22 +3,32 @@ postprocess.py
 ==============
 Postprocessing of trained models, in two modes:
 
-Predictions are always read directly from the training pickle
-results/<model>/<conf>/<model>_preds.pkl (no intermediate file is written).
+Predictions are read from the training pickle
+results/<model>/<conf>/<model>_preds.pkl. The computed metrics and the
+stacked obs/pred series are cached per config, so figures can be redrawn
+(all of them or only some) without recomputing anything.
+
+    python postprocess.py --help           # all arguments and examples
+    python postprocess.py --list-figures   # all figure names and groups
+
+Figure style (sizes, colors, colorbars, output format) comes from
+configs/plots/default.yaml, optionally overridden with --plot-config.
 
 1. Single-model evaluation (main + extreme) for ONE config.
 
-       python postprocess.py --config configs/xgb/conf0.yaml
+       python postprocess.py --config configs/train/xgb/conf0.yaml
+       python postprocess.py --config configs/train/xgb/conf0.yaml --plot-only --figures main
 
    Outputs saved in:
+       postprocessing/results/single/<model>/<conf>/cache/
        postprocessing/results/single/<model>/<conf>/main/
        postprocessing/results/single/<model>/<conf>/extreme/
 
-2. Intercomparison across multiple trained configs.
+2. Intercomparison across multiple trained configs (reuses each config's cache).
 
        # Compare specific configs
        python postprocess.py \
-           --configs configs/xgb/conf0.yaml configs/xgb/conf1.yaml configs/lstm/conf0.yaml
+           --configs configs/train/xgb/conf0.yaml configs/train/xgb/conf1.yaml configs/train/lstm/conf0.yaml
 
        # Compare ALL configs of one model
        python postprocess.py --model xgb
@@ -32,9 +42,9 @@ results/<model>/<conf>/<model>_preds.pkl (no intermediate file is written).
 
 import os
 import sys
-import argparse
 import glob
 import pickle
+import types
 import numpy as np
 import xarray as xr
 import geopandas as gpd
@@ -48,31 +58,15 @@ sys.path.insert(0, str(ROOT / "postprocessing"))
 
 from src.core.config import load_config
 from src.core.utils import vprint, set_verbose, build_morocco_mask
+from src.core.cli import TableHelpParser, render_table
 
 from postproc.utils   import get_valid_morocco_points, stack_on_points
 from postproc.metrics import (
     compute_metrics_df, compute_seasonal_metrics_df, add_region_labels
 )
-from postproc.main.plots_main import (
-    plot_spatial_metrics, plot_boxplots_global, plot_boxplots_by_season,
-    plot_boxplots_by_region, plot_et_distribution,
-    plot_mean_et_map, plot_et_seasonal_maps,
-)
-from postproc.extreme.plots_extreme import (
-    plot_spatial_extreme, plot_boxplots_extreme,
-    plot_boxplots_extreme_by_season, plot_boxplots_extreme_by_region,
-)
-from postproc.intercomparison.plots_intercomp import (
-    plot_intercomparison_by_region,
-    plot_spatial_metrics_intercomp,
-    plot_boxplots_global_intercomp,
-    plot_boxplots_by_season_intercomp,
-    plot_boxplots_by_region_intercomp,
-    plot_mean_et_map_intercomp,
-    plot_et_seasonal_maps_intercomp,
-    plot_et_boxplots_intercomp,
-    DEFAULT_COLORS,
-)
+from postproc.cache   import cache_status, save_cache, load_cache
+from postproc.figures import SINGLE_FIGURES, INTERCOMP_FIGURES, resolve_figures
+from postproc.plot_config import load_plot_config, PlotConfigError
 
 POSTPROCESSING_DIR = os.path.join(ROOT, "postprocessing")
 REGION_NAMES       = ["north", "north_east", "east", "south"]
@@ -127,10 +121,6 @@ def _stack_and_compute_metrics(cfg, obs_da, pred_da, label):
     }
 
 
-# ======================================================================
-# Single-model evaluation
-# ======================================================================
-
 def _build_prediction_grids(cfg):
     """Rebuild (time, lat, lon) obs/pred DataArrays from the training pickle."""
     preds_path = os.path.join(cfg.path_out, f"{cfg.model_type}_preds.pkl")
@@ -173,70 +163,85 @@ def _build_prediction_grids(cfg):
     return obs_da, pred_da
 
 
-def run_single(config_path):
+def _single_dir(cfg):
+    return os.path.join(POSTPROCESSING_DIR, "results", "single", cfg.model_type, cfg.conf_name)
+
+
+def get_results(cfg, label, plot_only=False, recompute=False):
+    """
+    Return the computed results of one config, from its cache when valid.
+
+    The cache is computed (and saved) when missing or stale, unless
+    plot_only is set. Returns None, with a printed reason, when there is
+    nothing usable.
+    """
+    preds_path = os.path.join(cfg.path_out, f"{cfg.model_type}_preds.pkl")
+    cache_dir  = os.path.join(_single_dir(cfg), "cache")
+    status     = cache_status(cache_dir, cfg, preds_path)
+    tag        = f"{cfg.model_type}/{cfg.conf_name}"
+
+    if not recompute and status in ("ok", "unverified"):
+        if status == "unverified":
+            print(f"  [WARN] {tag}: predictions pickle not found, using its cache unchecked")
+        vprint(f"  {tag}: using cache {cache_dir}")
+        r = load_cache(cache_dir)
+    elif plot_only:
+        print(f"  [SKIP] {tag}: cache is {status}, run without --plot-only to compute it")
+        return None
+    elif not os.path.exists(preds_path):
+        print(f"  [SKIP] {tag}: predictions not found: {preds_path}")
+        return None
+    else:
+        vprint(f"  {tag}: computing per-pixel metrics (annual + seasonal)...")
+        obs_da, pred_da = _build_prediction_grids(cfg)
+        r = _stack_and_compute_metrics(cfg, obs_da, pred_da, cfg.model_type.upper())
+        save_cache(cache_dir, cfg, preds_path, r)
+        vprint(f"  {tag}: cache saved in {cache_dir}")
+
+    r["label"] = label
+    r["cfg"]   = cfg
+    r["gdfs_regions"] = _load_region_gdfs(cfg)
+    for df in (r["df_annual"], r["df_seasonal"]):
+        df["Model"] = label
+    return r
+
+
+# ======================================================================
+# Single-model evaluation
+# ======================================================================
+
+def run_single(config_path, figures, style, plot_only=False, recompute=False):
     cfg = load_config(config_path=config_path, train_mode=False)
     set_verbose(cfg.verbose)
 
-    model_type = cfg.model_type
-    model_name = model_type.upper()   # display label for plot titles
-    conf_name  = cfg.conf_name
+    model_name = cfg.model_type.upper()   # display label for plot titles
+    vprint(f"=== Single-model postprocessing  |  {model_name}  {cfg.conf_name} ===")
+
+    r = get_results(cfg, model_name, plot_only, recompute)
+    if r is None:
+        sys.exit(1)
 
     # Output dirs
-    path_main            = os.path.join(POSTPROCESSING_DIR, "results", "single", model_type, conf_name, "main")
-    path_metrics_dist    = os.path.join(path_main, "metric_distribution")
-    path_et_dist         = os.path.join(path_main, "et_distribution")
-    path_extreme         = os.path.join(POSTPROCESSING_DIR, "results", "single", model_type, conf_name, "extreme")
-    path_extreme_metrics = os.path.join(path_extreme, "metric_distribution")
-    for d in (path_metrics_dist, path_et_dist, path_extreme_metrics):
+    path_main    = os.path.join(_single_dir(cfg), "main")
+    path_extreme = os.path.join(_single_dir(cfg), "extreme")
+    ctx = types.SimpleNamespace(
+        **r,
+        style                = style,
+        model_name           = model_name,
+        gdf_morocco          = _load_morocco_gdf(cfg),
+        path_metrics_dist    = os.path.join(path_main, "metric_distribution"),
+        path_et_dist         = os.path.join(path_main, "et_distribution"),
+        path_extreme_metrics = os.path.join(path_extreme, "metric_distribution"),
+    )
+    for d in (ctx.path_metrics_dist, ctx.path_et_dist, ctx.path_extreme_metrics):
         os.makedirs(d, exist_ok=True)
 
-    vprint(f"=== Single-model postprocessing  |  {model_name}  {conf_name} ===")
+    for name in figures:
+        vprint(f"Plotting {name}...")
+        SINGLE_FIGURES[name].draw(ctx)
 
-    # ------------------------------------------------------------------
-    # Load predictions pickle saved by training
-    # ------------------------------------------------------------------
-    obs_da, pred_da = _build_prediction_grids(cfg)
-
-    # ------------------------------------------------------------------
-    # Per-pixel metrics
-    # ------------------------------------------------------------------
-    vprint("Computing per-pixel metrics (annual + seasonal)...")
-    r = _stack_and_compute_metrics(cfg, obs_da, pred_da, model_name)
-    df_annual, df_seasonal = r["df_annual"], r["df_seasonal"]
-    obs_stacked, pred_stacked = r["obs"], r["pred"]
-    valid_lats, valid_lons = r["lats"], r["lons"]
-    gdfs_regions = r["gdfs_regions"]
-    gdf_morocco  = _load_morocco_gdf(cfg)
-
-    df_annual.to_csv(os.path.join(path_main, "metrics_annual.csv"),     index=False)
-    df_seasonal.to_csv(os.path.join(path_main, "metrics_seasonal.csv"), index=False)
-    vprint("  Metrics CSVs saved.")
-
-    # ------------------------------------------------------------------
-    # MAIN plots
-    # ------------------------------------------------------------------
-    vprint("Generating main evaluation plots...")
-    plot_spatial_metrics(df_annual,      model_name, gdf_morocco, path_metrics_dist)
-    plot_boxplots_global(df_annual,      model_name, path_metrics_dist)
-    plot_boxplots_by_season(df_seasonal, model_name, path_metrics_dist)
-    plot_boxplots_by_region(df_annual,   model_name, path_metrics_dist)
-
-    plot_et_distribution(obs_stacked, pred_stacked, valid_lats, valid_lons,
-                         gdfs_regions, model_name, path_et_dist)
-    plot_mean_et_map(obs_stacked, pred_stacked, valid_lats, valid_lons,
-                     model_name, gdf_morocco, path_et_dist)
-    plot_et_seasonal_maps(obs_stacked, pred_stacked, valid_lats, valid_lons,
-                          model_name, gdf_morocco, path_et_dist)
-
-    # ------------------------------------------------------------------
-    # EXTREME plots
-    # ------------------------------------------------------------------
-    vprint("Generating extreme evaluation plots...")
-    plot_spatial_extreme(df_annual,              model_name, gdf_morocco, path_extreme_metrics)
-    plot_boxplots_extreme(df_annual,             model_name, path_extreme_metrics)
-    plot_boxplots_extreme_by_season(df_seasonal, model_name, path_extreme_metrics)
-    plot_boxplots_extreme_by_region(df_annual,   model_name, path_extreme_metrics)
-
+    record = style.write_record(_single_dir(cfg))
+    vprint(f"Style used → {record}")
     vprint(f"=== Done  |  main → {path_main}  |  extreme → {path_extreme} ===")
 
 
@@ -244,43 +249,21 @@ def run_single(config_path):
 # Intercomparison
 # ======================================================================
 
-def _load_all_for_config(config_path):
-    """Load metrics df + raw stacked DataArrays for one config from its preds pickle."""
-    cfg        = load_config(config_path=config_path, train_mode=False)
-    model_name = cfg.model_type.upper()
-    label      = f"{model_name} {cfg.conf_name}"
-
-    preds_path = os.path.join(cfg.path_out, f"{cfg.model_type}_preds.pkl")
-    if not os.path.exists(preds_path):
-        print(f"  [SKIP] predictions not found: {preds_path}")
-        return None
-
-    obs_da, pred_da = _build_prediction_grids(cfg)
-    r = _stack_and_compute_metrics(cfg, obs_da, pred_da, label)
-
-    print(f"  Loaded: {label}  ({len(r['df_annual'])} pixels)")
-    return r
-
-
-def run_compare(config_paths):
-    results = [_load_all_for_config(cp) for cp in config_paths]
-    results = [r for r in results if r is not None]
+def run_compare(config_paths, figures, style, plot_only=False, recompute=False):
+    results = []
+    for cp in config_paths:
+        cfg   = load_config(config_path=cp, train_mode=False)
+        label = f"{cfg.model_type.upper()} {cfg.conf_name}"
+        r     = get_results(cfg, label, plot_only, recompute)
+        if r is not None:
+            print(f"  Loaded: {label}  ({len(r['df_annual'])} pixels)")
+            results.append(r)
 
     if not results:
         print("No valid predictions found.")
         sys.exit(1)
 
-    labels       = [r["label"]       for r in results]
-    dfs          = [r["df_annual"]   for r in results]
-    dfs_seasonal = [r["df_seasonal"] for r in results]
-    obs_list     = [r["obs"]         for r in results]
-    pred_list    = [r["pred"]        for r in results]
-    lats_list    = [r["lats"]        for r in results]
-    lons_list    = [r["lons"]        for r in results]
-    gdfs_regions = results[0]["gdfs_regions"]
-    first_cfg    = results[0]["cfg"]
-
-    colors = DEFAULT_COLORS[:len(labels)]
+    labels = [r["label"] for r in results]
 
     # Output dir
     run_label = "_vs_".join(l.replace(" ", "_") for l in labels).lower()
@@ -288,29 +271,27 @@ def run_compare(config_paths):
     os.makedirs(path_out, exist_ok=True)
     print(f"\nOutputs → {path_out}")
 
-    gdf_morocco = _load_morocco_gdf(first_cfg)
+    ctx = types.SimpleNamespace(
+        style        = style,
+        labels       = labels,
+        colors       = style.model_colors(len(labels)),
+        dfs          = [r["df_annual"]   for r in results],
+        dfs_seasonal = [r["df_seasonal"] for r in results],
+        obs_list     = [r["obs"]         for r in results],
+        pred_list    = [r["pred"]        for r in results],
+        lats_list    = [r["lats"]        for r in results],
+        lons_list    = [r["lons"]        for r in results],
+        gdfs_regions = results[0]["gdfs_regions"],
+        gdf_morocco  = _load_morocco_gdf(results[0]["cfg"]),
+        path_out     = path_out,
+    )
 
-    # ── Bar plots (region intercomparison)
-    plot_intercomparison_by_region(dfs, labels, path_out, colors)
+    for name in figures:
+        print(f"Plotting {name}...")
+        INTERCOMP_FIGURES[name].draw(ctx)
 
-    # ── Metric spatial maps
-    plot_spatial_metrics_intercomp(dfs, labels, gdf_morocco, path_out)
-
-    # ── Metric boxplots
-    plot_boxplots_global_intercomp(dfs, labels, colors, path_out)
-    plot_boxplots_by_season_intercomp(dfs_seasonal, labels, colors, path_out)
-    plot_boxplots_by_region_intercomp(dfs, labels, colors, path_out)
-
-    # ── ET maps
-    plot_mean_et_map_intercomp(obs_list, pred_list, lats_list, lons_list,
-                               labels, gdf_morocco, path_out)
-    plot_et_seasonal_maps_intercomp(obs_list, pred_list, lats_list, lons_list,
-                                    labels, gdf_morocco, path_out)
-
-    # ── ET boxplots
-    plot_et_boxplots_intercomp(obs_list, pred_list, lats_list, lons_list,
-                               labels, colors, gdfs_regions, path_out)
-
+    record = style.write_record(path_out)
+    print(f"Style used → {record}")
     print(f"\n=== Intercomparison done  |  {path_out} ===")
 
 
@@ -318,41 +299,114 @@ def run_compare(config_paths):
 # Entry point
 # ======================================================================
 
-def main():
-    parser = argparse.ArgumentParser(
+def _print_figure_list():
+    rows = [["single", f.group, name, f.description] for name, f in SINGLE_FIGURES.items()]
+    rows += [["intercomparison", f.group, name, f.description]
+             for name, f in INTERCOMP_FIGURES.items()]
+    print(render_table(["Mode", "Group", "Figure", "Description"], rows))
+    print("\nPass figure names and/or groups to --figures; 'all' selects every "
+          "figure of the current mode.")
+
+
+def _build_parser():
+    examples = [
+        ("python postprocess.py --config configs/train/xgb/conf0.yaml",
+         "Evaluate one config: compute or reuse its cache, draw all figures (style: configs/plots/default.yaml)"),
+        ("python postprocess.py --config configs/train/xgb/conf0.yaml --plot-only --figures main",
+         "Redraw only the main figures from the cache"),
+        ("python postprocess.py --config configs/train/xgb/conf0.yaml --plot-only --figures extreme",
+         "Redraw only the extreme figures from the cache"),
+        ("python postprocess.py --config configs/train/xgb/conf0.yaml --plot-only --figures spatial_metrics mean_et_map",
+         "Redraw two specific figures"),
+        ("python postprocess.py --config configs/train/xgb/conf0.yaml --recompute",
+         "Ignore the cache: recompute metrics from the predictions pickle"),
+        ("python postprocess.py --configs configs/train/xgb/conf0.yaml configs/train/lstm/conf0.yaml",
+         "Intercompare these configs (all intercomparison figures)"),
+        ("python postprocess.py --model xgb",
+         "Intercompare all configs of one model type"),
+        ("python postprocess.py --all --plot-only --figures intercomp",
+         "Intercompare all trained configs from their caches"),
+        ("python postprocess.py --all --plot-only --figures mean_et_map et_boxplots",
+         "Redraw two intercomparison figures"),
+        ("python postprocess.py --config configs/train/xgb/conf0.yaml --plot-only --figures spatial_metrics --plot-config configs/plots/overrides/paper.yaml",
+         "Redraw one figure with the paper style (overrides/paper.yaml merged on configs/plots/default.yaml)"),
+        ("python postprocess.py --list-figures",
+         "List every figure name and group"),
+    ]
+    parser = TableHelpParser(
+        prog="postprocess.py",
         description="Single-model evaluation (--config) or intercomparison "
-                    "(--configs / --model / --all)."
+                    "(--configs / --model / --all) of trained configs. Metrics and "
+                    "obs/pred series are cached per config in "
+                    "postprocessing/results/single/<model>/<conf>/cache/.",
+        examples=examples,
+        notes="Run from the project root. Use --list-figures to see figure names. "
+              "Figure style: configs/plots/default.yaml, unless --plot-config is given (the style actually used is "
+              "saved next to the figures in plot_config_used.yaml).",
     )
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--config",
-                       help="Evaluate one config, e.g. configs/xgb/conf0.yaml")
-    group.add_argument("--configs", nargs="+",
-                       help="Intercompare these configs")
-    group.add_argument("--model",
-                       help="Intercompare all configs of one model type, e.g. xgb")
-    group.add_argument("--all", action="store_true",
-                       help="Intercompare all configs of all model types")
-    args = parser.parse_args()
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--config", metavar="YAML",
+                      help="Evaluate one config, e.g. configs/train/xgb/conf0.yaml")
+    mode.add_argument("--configs", nargs="+", metavar="YAML",
+                      help="Intercompare these configs")
+    mode.add_argument("--model", metavar="TYPE",
+                      help="Intercompare all configs of one model type, e.g. xgb")
+    mode.add_argument("--all", action="store_true",
+                      help="Intercompare all configs of all model types")
+    mode.add_argument("--list-figures", action="store_true",
+                      help="List all figure names and groups, then exit")
+
+    parser.add_argument("--figures", nargs="+", default=["all"], metavar="NAME",
+                        help="Figures to draw: figure names and/or groups "
+                             "(main, extreme for --config; intercomp for the "
+                             "intercomparison modes; all)")
+    parser.add_argument("--plot-config", metavar="YAML",
+                        help="Figure style. Without it: configs/plots/default.yaml. With it: this "
+                             "override (e.g. configs/plots/overrides/paper.yaml) merged on top of "
+                             "default.yaml")
+    cache = parser.add_mutually_exclusive_group()
+    cache.add_argument("--plot-only", action="store_true",
+                       help="Never compute: draw from the cache, skip configs without a valid one")
+    cache.add_argument("--recompute", action="store_true",
+                       help="Ignore the cache and recompute it from the predictions pickle")
+    return parser
+
+
+def main():
+    parser = _build_parser()
+    args   = parser.parse_args()
+
+    if args.list_figures:
+        _print_figure_list()
+        return
+    if not (args.config or args.configs or args.model or args.all):
+        parser.error("one of --config, --configs, --model, --all or --list-figures is required")
+
+    registry = SINGLE_FIGURES if args.config else INTERCOMP_FIGURES
+    try:
+        figures = resolve_figures(args.figures, registry)
+        style   = load_plot_config(args.plot_config)
+    except (ValueError, PlotConfigError) as e:
+        parser.error(str(e))
 
     if args.config:
-        run_single(args.config)
+        run_single(args.config, figures, style, args.plot_only, args.recompute)
         return
 
     if args.configs:
         config_paths = args.configs
     elif args.model:
         config_paths = sorted(glob.glob(
-            os.path.join("configs", args.model.lower(), "*.yaml")
+            os.path.join("configs", "train", args.model.lower(), "*.yaml")
         ))
     else:
-        config_paths = sorted(glob.glob(os.path.join("configs", "*", "*.yaml")))
-        config_paths = [p for p in config_paths if "common" not in p]
+        config_paths = sorted(glob.glob(os.path.join("configs", "train", "*", "*.yaml")))
 
     if not config_paths:
         print("No config files found.")
         sys.exit(1)
 
-    run_compare(config_paths)
+    run_compare(config_paths, figures, style, args.plot_only, args.recompute)
 
 
 if __name__ == "__main__":
