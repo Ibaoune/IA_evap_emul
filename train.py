@@ -2,10 +2,11 @@
 Entry point for training.
 
 Usage: run in terminal from project root, e.g.
-    python train.py --config configs/xgb/conf0.yaml
-    python train.py --config configs/mlp/conf1.yaml
-    python train.py --config configs/lstm/conf2.yaml
-    python train.py --config configs/mlr_rf/conf0.yaml
+    python train.py --help
+    python train.py --config configs/train/xgb/conf0.yaml
+    python train.py --config configs/train/mlp/conf1.yaml
+    python train.py --config configs/train/lstm/conf2.yaml
+    python train.py --config configs/train/mlr_rf/conf0.yaml
 """
 
 
@@ -13,7 +14,6 @@ import os
 import sys
 import pickle
 import shutil
-import argparse
 
 # ── project root on the path ─────────────────────────────────────────────────
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -24,15 +24,35 @@ from src.data.preprocessing        import preprocess_data
 from src.core.training             import PointWiseTrain, SpatialTrain
 from src.core.utils                import vprint, set_verbose, set_seed
 from src.core.plots                import plot_mean_maps
+from src.core.cli                  import TableHelpParser
+
+
+def _build_parser():
+    examples = [
+        ("python train.py --config configs/train/xgb/conf0.yaml",
+         "Train one experiment; outputs go to results/xgb/conf0/"),
+        ("python train.py --config configs/train/rcan/conf0.yaml --dry-run",
+         "Smoke test: 1 epoch, train/val/test = 1979/2006/2009, 2 trees for XGB/MLR-RF"),
+    ]
+    parser = TableHelpParser(
+        prog="train.py",
+        description="Train one downscaling experiment defined by a config yaml "
+                    "(merged on top of configs/train/common.yaml) and save its "
+                    "predictions pickle in results/<model_type>/<conf>/.",
+        examples=examples,
+        notes="Model types: xgb, lstm, mlp, mlr_rf, autoencoder, convlstm, rcan. "
+              "Run from the project root.",
+    )
+    parser.add_argument("--config", required=True, metavar="YAML",
+                        help="Path to model config yaml, e.g. configs/train/xgb/conf0.yaml")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Quick smoke test: 1 epoch, 1 year each for train/val/test, "
+                             "2 trees for XGB/MLR-RF")
+    return parser
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True,
-                        help="Path to model config yaml, e.g. configs/xgb/conf0.yaml")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Run a quick dry run with 1 epoch and 1 year of data")
-    args = parser.parse_args()
+    args = _build_parser().parse_args()
 
     cfg = load_config(config_path=args.config, train_mode=True)
     set_seed(cfg.seed)
