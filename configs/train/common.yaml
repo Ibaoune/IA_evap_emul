@@ -46,7 +46,6 @@ paths:
   #shp_path:            "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/shapefiles"
   #shp_regions_path:    "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/shapefiles/Morocco_shpfile"
   #tsol_path:           "/home/mohammad.elaabaribao/lustre/climat-um6p-st-iwri-7ksifkvwkuy/users/mohammad.elaabaribao/data/models/evap_staging/models/evap_staging/shapefiles/shapefiles/shapefiles/models/evap_staging/interns/evap_predictors"
-  #model_save_dir:      "models"
   #results_dir:         "/srv/data/mohammad.elaabaribao/work/interns/y2026/evap/ds_evap_intern/results"
 
   # Paths for Hamza's environment
@@ -58,5 +57,4 @@ paths:
   shp_path:            "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/morocco_complet_shapefiles"
   shp_regions_path:    "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/shapefiles_by_region"
   tsol_path:           "/home/hamza/Desktop/projects/pfe_project/PFE_2026_AI_Based_Production_of_High_Resolution_Agroclimate_Data/Data & Visualizations/Raw data/soil_temperature"
-  model_save_dir:      "models"
   results_dir:         "results"

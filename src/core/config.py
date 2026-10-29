@@ -147,7 +147,6 @@ class Config:
         self.altitude_path      = str(paths["altitude_path"])
         self.shp_path           = str(paths["shp_path"])
         self.shp_regions_path   = str(paths["shp_regions_path"])
-        self.model_save_dir     = str(paths["model_save_dir"])
         self.target_evap_path   = str(paths.get("target_evap_path", ""))
         
         self.soil_moisture_path = paths.get("soil_moisture_path")
@@ -158,7 +157,6 @@ class Config:
         base_results = str(paths["results_dir"])
         self.path_out = os.path.join(base_results, self.model_type, self.conf_name)
 
-        os.makedirs(self.model_save_dir, exist_ok=True)
         os.makedirs(self.path_out,       exist_ok=True)
 
 
